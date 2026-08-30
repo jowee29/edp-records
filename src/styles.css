@@ -3760,3 +3760,17 @@ html[data-theme="dark"] .service-unit-modal .modal-close{
     padding-top: 2mm !important;
   }
 }
+
+/* Accomplishment control number footer */
+.letter-accomplishment-paper .lav-confirm{position:relative}
+.letter-accomplishment-paper .lav-control-number{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:6px;
+}
+.letter-accomplishment-paper .lav-control-number span{color:#555}
+.letter-accomplishment-paper .lav-control-number b{font-size:12px;letter-spacing:.12em}
+@media print{
+  .letter-accomplishment-paper .lav-control-number{font-size:8px;margin-bottom:2mm}
+  .letter-accomplishment-paper .lav-control-number b{font-size:9px}
+}

@@ -1,7 +1,7 @@
 import edpLogo from '../assets/edp-logo.png';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth';
-import { addDoc, collection, getDocs, orderBy, query, serverTimestamp, where } from 'firebase/firestore';
+import { collection, doc, getDocs, orderBy, query, runTransaction, serverTimestamp, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { audit } from '../auth';
 
@@ -16,8 +16,16 @@ export default function Accomplishment({ embedded=false, onSaved }={}){
   const branch=useMemo(()=>branches.find(b=>b.id===form.branchId),[branches,form.branchId]);
   const groupedBranches=useMemo(()=>{const map=new Map(groups.map(g=>[g.id,g.name]));const grouped={};branches.forEach(b=>{const key=b.groupId||'unassigned';const name=map.get(key)||b.groupName||'Unassigned';(grouped[name]??=[]).push(b)});return Object.entries(grouped).sort(([a],[b])=>a.localeCompare(b)).map(([name,list])=>({name,list:list.sort((a,b)=>String(a.branchName||'').localeCompare(String(b.branchName||'')))}));},[branches,groups]);
   const change=(key,value)=>setForm(f=>({...f,[key]:value}));
-  const save=async(e)=>{e?.preventDefault();if(!form.branchId||!form.date||!form.findings.trim()){setError('Piliin ang branch, ilagay ang date, at ilagay ang findings/work done.');return}setSaving(true);setError('');setSaved(false);try{const payload={...form,groupId:profile?.groupId||branch?.groupId||'',createdBy:profile?.uid||'',branchName:branch?.branchName||form.branchVisited,branchSnapshot:branch?{branchName:branch.branchName,branchType:branch.branchType,company:branch.company,accountNo:branch.accountNo,telNo:branch.telNo,contactPerson:branch.contactPerson,contactNo:branch.contactNo,address:branch.address,oic:branch.oic,contactNo1:branch.contactNo1,isp:branch.isp,connType:branch.connType,plan:branch.plan,monthlyPayment:branch.monthlyPayment,ipAddress:branch.ipAddress,subnetMask:branch.subnetMask,defaultGateway:branch.defaultGateway,dns1:branch.dns1,dns2:branch.dns2,noOfComp:branch.noOfComp,printer2175:branch.printer2175,lx310ii:branch.lx310ii,colored:branch.colored}:null,createdAt:serverTimestamp(),updatedAt:serverTimestamp()};const ref=await addDoc(collection(db,'accomplishments'),payload);await audit({action:'CREATE_ACCOMPLISHMENT',details:`Created branch visit accomplishment for ${payload.branchName}`,targetUserId:ref.id});setSaved(true);setRecent(r=>[{id:ref.id,...payload},...r].slice(0,8));onSaved?.();}catch(e){setError(e.message)}finally{setSaving(false)}};
-  const reset=()=>{setForm(blank);setError('');setSaved(false)};
+  const save=async(e)=>{e?.preventDefault();if(!form.branchId||!form.date||!form.findings.trim()){setError('Piliin ang branch, ilagay ang date, at ilagay ang findings/work done.');return}setSaving(true);setError('');setSaved(false);try{const groupId=branch?.groupId||profile?.groupId||'unassigned';const groupName=branch?.groupName||profile?.groupName||'';const payload={...form,groupId,groupName,createdBy:profile?.uid||'',branchName:branch?.branchName||form.branchVisited,branchSnapshot:branch?{branchName:branch.branchName,branchType:branch.branchType,company:branch.company,accountNo:branch.accountNo,telNo:branch.telNo,contactPerson:branch.contactPerson,contactNo:branch.contactNo,address:branch.address,oic:branch.oic,contactNo1:branch.contactNo1,isp:branch.isp,connType:branch.connType,plan:branch.plan,monthlyPayment:branch.monthlyPayment,ipAddress:branch.ipAddress,subnetMask:branch.subnetMask,defaultGateway:branch.defaultGateway,dns1:branch.dns1,dns2:branch.dns2,noOfComp:branch.noOfComp,printer2175:branch.printer2175,lx310ii:branch.lx310ii,colored:branch.colored}:null,createdAt:serverTimestamp(),updatedAt:serverTimestamp()};const ref=doc(collection(db,'accomplishments'));const counterRef=doc(db,'accomplishmentCounters',groupId);let assignedNumber=1;await runTransaction(db,async(tx)=>{const counterSnap=await tx.get(counterRef);const current=Number(counterSnap.exists()?counterSnap.data()?.lastNumber||0:0);assignedNumber=current+1;tx.set(counterRef,{groupId,groupName,lastNumber:assignedNumber,updatedAt:serverTimestamp()},{merge:true});tx.set(ref,{...payload,controlNumber:String(assignedNumber).padStart(6,'0')});});const savedPayload={...payload,controlNumber:String(assignedNumber).padStart(6,'0')};await audit({action:'CREATE_ACCOMPLISHMENT',details:`Created branch visit accomplishment ${savedPayload.controlNumber} for ${savedPayload.branchName}`,targetUserId:ref.id});setControlNumber(savedPayload.controlNumber);setSaved(true);setRecent(r=>[{id:ref.id,...savedPayload},...r].slice(0,8));onSaved?.();}catch(e){setError(e.message)}finally{setSaving(false)}};
+  const reset=()=>{setForm(blank);setControlNumber('');setError('');setSaved(false)};
+  const printAccomplishment=async()=>{
+    if(!controlNumber){
+      await save();
+      setTimeout(()=>window.print(),150);
+    }else{
+      window.print();
+    }
+  };
   return <>
     <div className={`page-title-row ${embedded?'no-print':''}`} style={embedded?{display:'none'}:undefined}><div><span className="eyebrow">FIELD SERVICE DOCUMENT</span><h1>Add Accomplishment Form</h1><p>EDP Branch Visit Accomplishment.</p></div></div>
     <div className="accomplishment-toolbar no-print"><div><b>EDP Branch Visit Accomplishment</b><span> Letter portrait layout.</span></div>{saved&&<span className="success-pill">✓ Saved to Firebase</span>}</div>
@@ -74,10 +82,11 @@ export default function Accomplishment({ embedded=false, onSaved }={}){
       </div>
 
       <div className="lav-confirm">
+        <div className="lav-control-number"><span>CONTROL NO.</span><b>{controlNumber || '000000'}</b></div>
         <div className="lav-sign"><label>CONFIRMED BY HMS TEAM LEADER<select value={form.confirmedBy} onChange={e=>change('confirmedBy',e.target.value)}><option value="">Select Team Leader...</option>{leaders.map(u=><option key={u.id} value={u.displayName||u.name||u.fullName||u.email}>{u.displayName||u.name||u.fullName||u.email}</option>)}</select></label><div className="lav-sign-line"></div><small>Signature over Printed Name</small></div>
         <div className="lav-sign"><label>BRANCH REPRESENTATIVE<input value={form.branchRepresentative} onChange={e=>change('branchRepresentative',e.target.value)} /></label><div className="lav-sign-line"></div><small>Signature over Printed Name</small></div>
       </div>
-      <div className="paper-save-actions no-print"><button type="button" className="outline-btn" onClick={reset}>Clear</button><button type="submit" className="amber-btn" disabled={saving||loading}>{saving?'Saving...':'Save Accomplishment'}</button><button type="button" className="outline-btn" onClick={()=>window.print()}>🖨 Print</button></div>
+      <div className="paper-save-actions no-print"><button type="button" className="outline-btn" onClick={reset}>Clear</button><button type="submit" className="amber-btn" disabled={saving||loading}>{saving?'Saving...':'Save Accomplishment'}</button><button type="button" className="outline-btn" onClick={printAccomplishment} disabled={saving||loading}>🖨 Print</button></div>
     </form>
     <div className={`recent-accomplishments no-print ${embedded?'embedded-hide':''}`}><div className="page-title-row"><div><span className="eyebrow">HISTORY</span><h2>Recent Accomplishments</h2></div></div><div className="content-card table-wrap"><table><thead><tr><th>DATE</th><th>BRANCH</th><th>TEAM LEADER</th><th>HMS STAFF</th><th>CREATED</th></tr></thead><tbody>{recent.length?recent.map(r=><tr key={r.id}><td>{r.date||'—'}</td><td><b>{r.branchName||r.branchVisited||'—'}</b></td><td>{r.teamLeader||'—'}</td><td>{r.hmsStaff||'—'}</td><td>{r.createdAt?.toDate?r.createdAt.toDate().toLocaleString():'Saved'}</td></tr>):<tr><td colSpan="5" className="empty-state">No saved accomplishment forms yet.</td></tr>}</tbody></table></div></div>
   </>;

@@ -51,6 +51,12 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myGroupId() && request.resource.data.groupId == myGroupId());
     }
 
+    match /accomplishmentCounters/{groupId} {
+      allow read: if isSuperAdmin() || (isStaff() && groupId == myGroupId());
+      allow create, update: if isSuperAdmin() || (isStaff() && groupId == myGroupId());
+      allow delete: if isSuperAdmin();
+    }
+
     match /retirements/{retirementId} {
       allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
       allow read: if isStaff();
