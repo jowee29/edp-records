@@ -1,0 +1,22 @@
+SERVICE UNIT UPDATE
+
+New Service Unit menu is available to Super Admin, Admin, and Employee.
+
+Fields:
+- Unit (dynamic dropdown from Units menu)
+- Model
+- Brand
+- Asset Code
+- Serial #
+- Issue To (dynamic Branch dropdown scoped by group; Super Admin sees all branches)
+- Date
+
+Behavior:
+- Table with pagination (10 per page)
+- Click any row to open View Service Unit modal
+- View modal supports Edit and Delete
+- Super Admin: all groups/branches
+- Admin/Employee: own group only
+- Firestore collection: serviceUnits
+
+Deploy firestore.rules together with the project.

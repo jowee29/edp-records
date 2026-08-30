@@ -13,6 +13,8 @@ import Branches from './pages/Branches';
 import Accomplishment from './pages/Accomplishment';
 import AccomplishmentHistory from './pages/AccomplishmentHistory';
 import Groups from './pages/Groups';
+import Units from './pages/Units';
+import ServiceUnit from './pages/ServiceUnit';
 import Retirement from './pages/Retirement';
 import PartsInventory from './pages/PartsInventory';
 import UsedParts from './pages/UsedParts';
@@ -38,6 +40,8 @@ const Icon=({name})=>{
     form:<><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></>,
     history:<><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></>,
     groups:<><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="3"/><path d="M2 20a7 7 0 0 1 14 0M14 20a6 6 0 0 1 8 0"/></>,
+    units:<><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></>,
+    serviceUnit:<><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5V3h10v2M7 10h10M7 14h6"/></>,
     audit:<><path d="M12 3l8 4v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V7l8-4Z"/><path d="M9 12l2 2 4-4"/></>,
     profile:<><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
     retirement:<><path d="M7 3h10v4H7z"/><path d="M5 7h14v14H5z"/><path d="M8 11h8M8 15h6"/></>,
@@ -126,7 +130,8 @@ function Layout({children}){
       {to:'/job-order',label:'Job Order',icon:'joborder',badgeKey:'jobOrders'},
       {to:'/job-done',label:'Job Done',icon:'jobdone',badgeKey:'jobDone'},
       {to:'/accomplishment',label:'Accomplishment',icon:'history'},
-      {to:'/retirement',label:'Retirement',icon:'retirement',badgeKey:'retirements'}
+      {to:'/retirement',label:'Retirement',icon:'retirement',badgeKey:'retirements'},
+      {to:'/service-unit',label:'Service Unit',icon:'serviceUnit'}
     ]},
     {label:'INVENTORY',items: isSuperAdmin ? [
       {to:'/parts-inventory',label:'Parts Inventory',icon:'inventory',badgeKey:'partsInventory'},
@@ -136,6 +141,7 @@ function Layout({children}){
     {label:'ADMINISTRATION',items: isSuperAdmin ? [
       {to:'/users',label:'User Management',icon:'users'},
       {to:'/groups',label:'Groups',icon:'groups'},
+      {to:'/units',label:'Units',icon:'units'},
       {to:'/audit-logs',label:'Audit Logs',icon:'audit'}
     ] : []}
   ].filter(g=>g.items.length>0);
@@ -195,8 +201,10 @@ export default function App(){
     <Route path="/users" element={<Protected roles={['super_admin']}><Layout><Users/></Layout></Protected>}/>
     <Route path="/branches" element={<Protected roles={['admin','employee','super_admin']}><Layout><Branches/></Layout></Protected>}/>
     <Route path="/groups" element={<Protected roles={['super_admin']}><Layout><Groups/></Layout></Protected>}/>
+    <Route path="/units" element={<Protected roles={['super_admin']}><Layout><Units/></Layout></Protected>}/>
     <Route path="/accomplishment" element={<Protected roles={['admin','employee','super_admin']}><Layout><AccomplishmentHistory/></Layout></Protected>}/>
     <Route path="/retirement" element={<Protected roles={['admin','employee','super_admin']}><Layout><Retirement/></Layout></Protected>}/>
+    <Route path="/service-unit" element={<Protected roles={['admin','employee','super_admin']}><Layout><ServiceUnit/></Layout></Protected>}/>
     <Route path="/job-order" element={<Protected roles={['admin','employee','super_admin']}><Layout><JobOrder/></Layout></Protected>}/>
     <Route path="/job-done" element={<Protected roles={['admin','employee','super_admin']}><Layout><JobDone/></Layout></Protected>}/>
     <Route path="/parts-inventory" element={<Protected roles={['super_admin']}><Layout><PartsInventory/></Layout></Protected>}/>

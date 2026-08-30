@@ -28,9 +28,20 @@ service cloud.firestore {
       allow create, update, delete: if isSuperAdmin();
     }
 
+    match /units/{unitId} {
+      allow read: if isStaff();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /serviceUnits/{serviceUnitId} {
+      allow read: if isStaff();
+      allow create: if isStaff() && (isSuperAdmin() || request.resource.data.groupId == myGroupId());
+      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myGroupId());
+    }
+
     match /branches/{branchId} {
       allow read: if isStaff();
-      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
+      allow create: if isSuperAdmin() || isAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
       allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myGroupId() && request.resource.data.groupId == myGroupId());
     }
 

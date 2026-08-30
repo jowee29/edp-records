@@ -4,7 +4,7 @@ import { db } from '../firebase';
 import { audit, useAuth } from '../auth';
 import ConfirmModal from '../components/ConfirmModal';
 
-const blank={branchId:'',branchName:'',assetCode:'',serialNo:'',itemProduct:'',notes:''};
+const blank={branchId:'',branchName:'',assetCode:'',serialNo:'',unitId:'',unitName:'',itemProduct:'',notes:''};
 const PAGE_SIZE=10;
 const STATUSES=['Pending','On Going Repair','Retired','Repaired'];
 const val=x=>x===null||x===undefined?'':String(x);
@@ -17,13 +17,13 @@ const dateText=x=>{
 
 export default function JobOrder(){
   const {profile}=useAuth();
-  const [branches,setBranches]=useState([]),[items,setItems]=useState([]),[inventory,setInventory]=useState([]);
+  const [branches,setBranches]=useState([]),[items,setItems]=useState([]),[inventory,setInventory]=useState([]),[units,setUnits]=useState([]);
   const [confirm,setConfirm]=useState(null),[confirmSaving,setConfirmSaving]=useState(false);
   const [form,setForm]=useState({...blank}),[editing,setEditing]=useState(null);
   const [modalOpen,setModalOpen]=useState(false),[viewing,setViewing]=useState(null),[retirementOpen,setRetirementOpen]=useState(false),[retirementSource,setRetirementSource]=useState(null);
   const [repairNoticeOpen,setRepairNoticeOpen]=useState(false),[repairPartsOpen,setRepairPartsOpen]=useState(false),[repairSource,setRepairSource]=useState(null);
   const [repairPartForm,setRepairPartForm]=useState({itemCode:'',inventoryId:'',branch:'',assetCode:'',serialNo:'',date:'',srf:'',edpStaff:'',status:'NOT DR',notes:''});
-  const [retirementForm,setRetirementForm]=useState({branchId:'',branchName:'',assetCode:'',serialNo:'',itemProduct:'',defectiveNote:'',datePurchase:'',dateRetired:'',receivedBy:'',receivedDate:''});
+  const [retirementForm,setRetirementForm]=useState({branchId:'',branchName:'',assetCode:'',serialNo:'',unitId:'',unitName:'',itemProduct:'',defectiveNote:'',datePurchase:'',dateRetired:'',receivedBy:'',receivedDate:''});
   const [search,setSearch]=useState(''),[statusFilter,setStatusFilter]=useState('ALL'),[branchFilter,setBranchFilter]=useState('ALL'),[page,setPage]=useState(1);
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState('');
 
@@ -34,10 +34,11 @@ export default function JobOrder(){
       const scopedGroup=profile.role==='super_admin'?null:(profile.groupId||'unassigned');
       const branchQuery=scopedGroup?query(collection(db,'branches'),where('groupId','==',scopedGroup),orderBy('branchName','asc')):query(collection(db,'branches'),orderBy('branchName','asc'));
       const jobQuery=scopedGroup?query(collection(db,'jobOrders'),where('groupId','==',scopedGroup),orderBy('createdAt','desc')):query(collection(db,'jobOrders'),orderBy('createdAt','desc'));
-      const [bs,js,inventorySnap]=await Promise.all([
+      const [bs,js,inventorySnap,unitSnap]=await Promise.all([
         getDocs(branchQuery).catch(async()=>getDocs(scopedGroup?query(collection(db,'branches'),where('groupId','==',scopedGroup)):collection(db,'branches'))),
         getDocs(jobQuery).catch(async()=>getDocs(scopedGroup?query(collection(db,'jobOrders'),where('groupId','==',scopedGroup)):collection(db,'jobOrders'))),
-        getDocs(query(collection(db,'partsInventory'),orderBy('itemCode','asc'))).catch(()=>getDocs(collection(db,'partsInventory')))
+        getDocs(query(collection(db,'partsInventory'),orderBy('itemCode','asc'))).catch(()=>getDocs(collection(db,'partsInventory'))),
+        getDocs(query(collection(db,'units'),orderBy('name','asc'))).catch(()=>getDocs(collection(db,'units')))
       ]);
       const branchRows=bs.docs.map(d=>({id:d.id,...d.data()}));
       setBranches((scopedGroup?branchRows.filter(b=>b.groupId===scopedGroup):branchRows).sort((a,b)=>val(a.branchName).localeCompare(val(b.branchName))));
@@ -47,7 +48,7 @@ export default function JobOrder(){
         const batch=writeBatch(db);
         alreadyRepaired.forEach(x=>{
           const doneRef=doc(collection(db,'jobDone'));
-          batch.set(doneRef,{branchId:x.branchId||'',branchName:x.branchName||'',assetCode:x.assetCode||'',serialNo:x.serialNo||'',itemProduct:x.itemProduct||'',notes:x.notes||'',repairedBy:x.repairedBy||x.updatedByName||x.receivedBy||profile.name||profile.username||profile.email||'User',repairedByUid:x.repairedByUid||profile.uid||'',status:'Repaired',received:false,receivedBy:'',receivedDate:'',repairedAt:x.updatedAt||x.createdAt||serverTimestamp(),createdAt:x.createdAt||serverTimestamp(),updatedAt:serverTimestamp(),sourceJobOrderId:x.id,groupId:x.groupId||profile.groupId||'unassigned',repairUsedParts:Boolean(x.repairUsedParts)});
+          batch.set(doneRef,{branchId:x.branchId||'',branchName:x.branchName||'',assetCode:x.assetCode||'',serialNo:x.serialNo||'',itemProduct:x.itemProduct||x.unitName||'',unitId:x.unitId||'',unitName:x.unitName||x.itemProduct||'',notes:x.notes||'',repairedBy:x.repairedBy||x.updatedByName||x.receivedBy||profile.name||profile.username||profile.email||'User',repairedByUid:x.repairedByUid||profile.uid||'',status:'Repaired',received:false,receivedBy:'',receivedDate:'',repairedAt:x.updatedAt||x.createdAt||serverTimestamp(),createdAt:x.createdAt||serverTimestamp(),updatedAt:serverTimestamp(),sourceJobOrderId:x.id,groupId:x.groupId||profile.groupId||'unassigned',repairUsedParts:Boolean(x.repairUsedParts)});
           batch.delete(doc(db,'jobOrders',x.id));
         });
         await batch.commit();
@@ -55,6 +56,7 @@ export default function JobOrder(){
       }
       setItems(loadedJobs.filter(x=>x.status!=='Repaired').sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
       setInventory(inventorySnap.docs.map(d=>({id:d.id,...d.data()})));
+      setUnits(unitSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>val(a.name).localeCompare(val(b.name))));
     }catch(e){setError(e.message||'Unable to load Job Orders.')}
     finally{setLoading(false)}
   };
@@ -63,25 +65,30 @@ export default function JobOrder(){
   const change=(k,v)=>setForm(f=>({...f,[k]:v}));
   const selectBranch=id=>{
     const b=branches.find(x=>x.id===id);
-    setForm(f=>({...f,branchId:id,branchName:b?.branchName||''}));
+    setForm(f=>({...f,branchId:id,branchName:b?.branchName||'',groupId:b?.groupId||f.groupId||profile.groupId||'unassigned'}));
+  };
+  const selectUnit=id=>{
+    const u=units.find(x=>x.id===id);
+    setForm(f=>({...f,unitId:id,unitName:u?.name||'',itemProduct:u?.name||''}));
   };
   const reset=()=>{setForm({...blank});setEditing(null);setError('')};
   const closeModal=()=>{reset();setModalOpen(false);document.body.classList.remove('modal-open')};
-  const openAdd=()=>{reset();setForm({...blank,branchId:branches[0]?.id||'',branchName:branches[0]?.branchName||''});setModalOpen(true);document.body.classList.add('modal-open')};
-  const openEdit=x=>{setEditing(x.id);setForm({...blank,...x});setError('');setModalOpen(true);document.body.classList.add('modal-open')};
+  const openAdd=()=>{reset();setForm({...blank,branchId:branches[0]?.id||'',branchName:branches[0]?.branchName||'',groupId:branches[0]?.groupId||profile.groupId||'unassigned'});setModalOpen(true);document.body.classList.add('modal-open')};
+  const openEdit=x=>{setEditing(x.id);setForm({...blank,...x,unitId:x.unitId||units.find(u=>val(u.name).trim().toLowerCase()===val(x.unitName||x.itemProduct).trim().toLowerCase())?.id||'',unitName:x.unitName||x.itemProduct||'',itemProduct:x.unitName||x.itemProduct||''});setError('');setModalOpen(true);document.body.classList.add('modal-open')};
   const openView=x=>{setViewing(x);document.body.classList.add('modal-open')};
   const closeView=()=>{setViewing(null);document.body.classList.remove('modal-open')};
 
   const save=async e=>{
     e.preventDefault();setSaving(true);setError('');
     try{
-      const branchName=val(form.branchName).trim(), assetCode=val(form.assetCode).trim(), serialNo=val(form.serialNo).trim(), itemProduct=val(form.itemProduct).trim(), notes=val(form.notes).trim();
-      if(!branchName||!assetCode||!serialNo||!itemProduct)throw new Error('Complete ang lahat ng required fields.');
+      const branchName=val(form.branchName).trim(), assetCode=val(form.assetCode).trim(), serialNo=val(form.serialNo).trim(), unitName=val(form.unitName||form.itemProduct).trim(), notes=val(form.notes).trim();
+      const unitId=val(form.unitId).trim();
+      if(!branchName||!assetCode||!serialNo||!unitName)throw new Error('Complete ang lahat ng required fields.');
       const duplicate=items.some(x=>x.id!==editing && val(x.assetCode).trim().toLowerCase()===assetCode.toLowerCase() && val(x.serialNo).trim().toLowerCase()===serialNo.toLowerCase());
       if(duplicate)throw new Error('May existing Job Order na kapareho ng Asset Code at Serial No.');
       if(editing){
         await updateDoc(doc(db,'jobOrders',editing),{
-          branchId:form.branchId||'',branchName,assetCode,serialNo,itemProduct,notes,
+          branchId:form.branchId||'',branchName,assetCode,serialNo,unitId,unitName,itemProduct:unitName,notes,
           groupId:items.find(x=>x.id===editing)?.groupId||profile.groupId||'unassigned',
           updatedAt:serverTimestamp()
         });
@@ -89,7 +96,7 @@ export default function JobOrder(){
       }else{
         const receivedBy=profile.name||profile.username||profile.email||'User';
         const ref=await addDoc(collection(db,'jobOrders'),{
-          branchId:form.branchId||'',branchName,assetCode,serialNo,itemProduct,notes,
+          branchId:form.branchId||'',branchName,assetCode,serialNo,unitId,unitName,itemProduct:unitName,notes,
           status:'Pending',receivedBy,receivedByUid:profile.uid||'',
           groupId:profile.groupId||'unassigned',
           createdAt:serverTimestamp(),updatedAt:serverTimestamp()
@@ -104,7 +111,7 @@ export default function JobOrder(){
     setRetirementSource(x);
     setRetirementForm({
       branchId:x.branchId||'',branchName:x.branchName||'',assetCode:x.assetCode||'',serialNo:x.serialNo||'',
-      itemProduct:x.itemProduct||'',defectiveNote:x.notes||'',datePurchase:x.datePurchase||'',dateRetired:'',
+      itemProduct:x.itemProduct||x.unitName||'',unitId:x.unitId||'',unitName:x.unitName||x.itemProduct||'',defectiveNote:x.notes||'',datePurchase:x.datePurchase||'',dateRetired:'',
       receivedBy:x.receivedBy||profile.name||profile.username||profile.email||'',receivedDate:''
     });
     setViewing(null);
@@ -127,7 +134,7 @@ export default function JobOrder(){
     const doneRef=doc(collection(db,'jobDone'));
     const batch=writeBatch(db);
     batch.set(doneRef,{
-      branchId:x.branchId||'',branchName:x.branchName||'',assetCode:x.assetCode||'',serialNo:x.serialNo||'',itemProduct:x.itemProduct||'',notes:x.notes||'',
+      branchId:x.branchId||'',branchName:x.branchName||'',assetCode:x.assetCode||'',serialNo:x.serialNo||'',unitId:x.unitId||'',unitName:x.unitName||x.itemProduct||'',itemProduct:x.itemProduct||x.unitName||'',notes:x.notes||'',
       repairedBy:profile.name||profile.username||profile.email||x.receivedBy||'User',repairedByUid:profile.uid||'',
       status:'Repaired',received:false,receivedBy:'',receivedDate:'',repairedAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp(),
       sourceJobOrderId:x.id,groupId:x.groupId||profile.groupId||'unassigned',...extra
@@ -165,7 +172,7 @@ export default function JobOrder(){
         transaction.update(invRef,{quantity:qty-1,updatedAt:serverTimestamp()});
         transaction.set(usedRef,{itemCode:f.itemCode,inventoryId:f.inventoryId,branch:f.branch,assetCode:f.assetCode,serialNo:f.serialNo,assetSerialNo:f.serialNo,date:f.date,srf:f.srf,edpStaff:f.edpStaff,status:f.status,notes:f.notes,jobOrderId:repairSource.id,groupId:repairSource.groupId||profile.groupId||'unassigned',createdBy:profile.uid||'',createdByName:profile.name||profile.username||'',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
         const doneRef=doc(collection(db,'jobDone'));
-        transaction.set(doneRef,{branchId:repairSource.branchId||'',branchName:repairSource.branchName||f.branch,assetCode:repairSource.assetCode||f.assetCode,serialNo:repairSource.serialNo||f.serialNo,itemProduct:repairSource.itemProduct||'',notes:repairSource.notes||'',repairedBy:f.edpStaff||profile.name||profile.username||'',repairedByUid:profile.uid||'',status:'Repaired',received:false,receivedBy:'',receivedDate:'',repairedAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp(),sourceJobOrderId:repairSource.id,groupId:repairSource.groupId||profile.groupId||'unassigned',repairUsedParts:true});
+        transaction.set(doneRef,{branchId:repairSource.branchId||'',branchName:repairSource.branchName||f.branch,assetCode:repairSource.assetCode||f.assetCode,serialNo:repairSource.serialNo||f.serialNo,unitId:repairSource.unitId||'',unitName:repairSource.unitName||repairSource.itemProduct||'',itemProduct:repairSource.itemProduct||repairSource.unitName||'',notes:repairSource.notes||'',repairedBy:f.edpStaff||profile.name||profile.username||'',repairedByUid:profile.uid||'',status:'Repaired',received:false,receivedBy:'',receivedDate:'',repairedAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp(),sourceJobOrderId:repairSource.id,groupId:repairSource.groupId||profile.groupId||'unassigned',repairUsedParts:true});
         transaction.delete(jobRef);
       });
       await audit({action:'REPAIR_JOB_ORDER_WITH_USED_PART',details:`Completed repair for ${f.assetCode} / ${f.serialNo}, added Used Part ${f.itemCode}, and moved to Job Done`,targetUserId:repairSource.id});
@@ -245,7 +252,7 @@ export default function JobOrder(){
 
     {error&&<div className="error no-print">{error}</div>}
     <div className="toolbar-row no-print">
-      <div className="search-wrap"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search branch, asset code, serial no., item product, received by..."/></div>
+      <div className="search-wrap"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search branch, asset code, serial no., unit, received by..."/></div>
       <select value={branchFilter} onChange={e=>setBranchFilter(e.target.value)}><option value="ALL">All Branches</option>{[...new Set(items.map(x=>x.branchName).filter(Boolean))].sort().map(b=><option key={b} value={b}>{b}</option>)}</select>
       <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="ALL">All Status</option>{STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select>
       <span className="count-label">{filtered.length} record{filtered.length===1?'':'s'}</span>
@@ -253,7 +260,7 @@ export default function JobOrder(){
 
     <div className="content-card table-card">
       <div className="table-scroll"><table className="data-table job-order-table">
-        <thead><tr><th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>NOTES</th><th>RECEIVED BY</th><th>DATE ENCODED</th><th>STATUS / ACTION</th></tr></thead>
+        <thead><tr><th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>UNIT</th><th>NOTES</th><th>RECEIVED BY</th><th>DATE ENCODED</th><th>STATUS / ACTION</th></tr></thead>
         <tbody>
           {loading?<tr><td colSpan="8" className="empty-state">Loading Job Orders...</td></tr>:
           shown.length===0?<tr><td colSpan="8" className="empty-state"><div className="empty-icon">◌</div><strong>No Job Order records found</strong><p>Add a new Job Order to get started.</p><button className="amber-btn" onClick={openAdd}>＋ New Job Order</button></td></tr>:
@@ -261,7 +268,7 @@ export default function JobOrder(){
             <td data-label="Branch Name"><span className="table-primary">{val(x.branchName)||'—'}</span></td>
             <td data-label="Asset Code" className="mono-cell">{val(x.assetCode)||'—'}</td>
             <td data-label="Serial No." className="mono-cell">{val(x.serialNo)||'—'}</td>
-            <td data-label="Item Products">{val(x.itemProduct)||'—'}</td>
+            <td data-label="Unit">{val(x.unitName||x.itemProduct)||'—'}</td>
             <td data-label="Notes"><span className="job-notes-cell">{val(x.notes)||'—'}</span></td>
             <td data-label="Received By">{val(x.receivedBy)||'—'}</td>
             <td data-label="Date Encoded">{dateText(x.createdAt)}</td>
@@ -278,7 +285,7 @@ export default function JobOrder(){
         <div className="view-branch-summary"><span>BRANCH NAME</span><strong>{val(viewing.branchName)||'—'}</strong><span>STATUS</span><strong><span className={statusClass(viewing.status)}>{viewing.status||'Pending'}</span></strong></div>
         <div className="job-order-detail-grid">
           <div><span>ASSET CODE</span><strong>{val(viewing.assetCode)||'—'}</strong></div><div><span>SERIAL NO.</span><strong>{val(viewing.serialNo)||'—'}</strong></div>
-          <div><span>ITEM PRODUCTS</span><strong>{val(viewing.itemProduct)||'—'}</strong></div><div className="job-notes-detail"><span>NOTES</span><strong>{val(viewing.notes)||'—'}</strong></div><div><span>RECEIVED BY</span><strong>{val(viewing.receivedBy)||'—'}</strong></div>
+          <div><span>UNIT</span><strong>{val(viewing.unitName||viewing.itemProduct)||'—'}</strong></div><div className="job-notes-detail"><span>NOTES</span><strong>{val(viewing.notes)||'—'}</strong></div><div><span>RECEIVED BY</span><strong>{val(viewing.receivedBy)||'—'}</strong></div>
           <div><span>DATE ENCODED</span><strong>{dateText(viewing.createdAt)}</strong></div>
         </div>
       </div>
@@ -293,7 +300,7 @@ export default function JobOrder(){
 
     {repairPartsOpen&&repairSource&&(<div className="modal-backdrop" role="presentation"><div className="modal branch-modal parts-editor-modal job-order-editor-modal repair-parts-modal" role="dialog" aria-modal="true" aria-labelledby="repair-parts-title">
       <div className="modal-header"><div><p className="eyebrow">USED PARTS</p><h2 id="repair-parts-title">Add Used Parts</h2><p className="subtext">I-save muna ang ginamit na part. Kapag successful, magiging <strong>Repaired</strong> ang Job Order.</p></div><button className="modal-close" type="button" onClick={closeRepairFlow}>×</button></div>
-      <form onSubmit={saveRepairWithPart}><div className="modal-body"><div className="repair-job-info"><span>JOB ORDER</span><strong>{val(repairSource.branchName)||'—'} &nbsp;•&nbsp; {val(repairSource.assetCode)||'—'} &nbsp;•&nbsp; {val(repairSource.serialNo)||'—'}</strong><small>{val(repairSource.itemProduct)||'—'}</small></div><div className="parts-form-grid">
+      <form onSubmit={saveRepairWithPart}><div className="modal-body"><div className="repair-job-info"><span>JOB ORDER</span><strong>{val(repairSource.branchName)||'—'} &nbsp;•&nbsp; {val(repairSource.assetCode)||'—'} &nbsp;•&nbsp; {val(repairSource.serialNo)||'—'}</strong><small>{val(repairSource.unitName||repairSource.itemProduct)||'—'}</small></div><div className="parts-form-grid">
         <label>ITEM CODE<select value={repairPartForm.inventoryId} onChange={e=>{const inv=inventory.find(i=>i.id===e.target.value);setRepairPartForm(f=>({...f,inventoryId:e.target.value,itemCode:val(inv?.itemCode)}))}} required><option value="">Select Item Code</option>{repairInventoryOptions.map(i=><option key={i.id} value={i.id}>{val(i.itemCode)} — {val(i.controlSerialNo)||'No Control/Serial No.'} (Qty: {Number(i.quantity)||0})</option>)}</select></label>
         <label>BRANCH<input value={repairPartForm.branch} readOnly/></label>
         <label>ASSET CODE<input value={repairPartForm.assetCode} readOnly/></label>
@@ -312,7 +319,7 @@ export default function JobOrder(){
         <label>BRANCH NAME<select value={retirementForm.branchId||''} onChange={e=>{const b=branches.find(x=>x.id===e.target.value);setRetirementForm(f=>({...f,branchId:e.target.value,branchName:b?.branchName||f.branchName}))}} required><option value="">Select Branch</option>{branches.map(b=><option key={b.id} value={b.id}>{b.branchName}</option>)}</select></label>
         <label>ASSET CODE<input value={retirementForm.assetCode} onChange={e=>setRetirementForm(f=>({...f,assetCode:e.target.value}))} required/></label>
         <label>SERIAL NO.<input value={retirementForm.serialNo} onChange={e=>setRetirementForm(f=>({...f,serialNo:e.target.value}))}/></label>
-        <label>ITEM PRODUCTS<input value={retirementForm.itemProduct} onChange={e=>setRetirementForm(f=>({...f,itemProduct:e.target.value}))} required/></label>
+        <label>UNIT<input value={retirementForm.unitName||retirementForm.itemProduct} onChange={e=>setRetirementForm(f=>({...f,itemProduct:e.target.value}))} required/></label>
         <label className="full-span">DEFECTIVE NOTE<textarea value={retirementForm.defectiveNote} onChange={e=>setRetirementForm(f=>({...f,defectiveNote:e.target.value}))} rows="3" placeholder="Describe defect, damage, or reason for retirement..."/></label>
         <label>DATE PURCHASE<input type="date" value={retirementForm.datePurchase} onChange={e=>setRetirementForm(f=>({...f,datePurchase:e.target.value}))}/></label>
         <label>DATE RETIRED<input type="date" value={retirementForm.dateRetired} onChange={e=>setRetirementForm(f=>({...f,dateRetired:e.target.value}))} required/></label>
@@ -330,7 +337,7 @@ export default function JobOrder(){
         <label>BRANCH NAME<select value={form.branchId} onChange={e=>selectBranch(e.target.value)} required><option value="">Select Branch</option>{branches.map(b=><option key={b.id} value={b.id}>{b.branchName}</option>)}</select></label>
         <label>ASSET CODE<input value={form.assetCode} onChange={e=>change('assetCode',e.target.value)} placeholder="Enter Asset Code" required/></label>
         <label>SERIAL NO.<input value={form.serialNo} onChange={e=>change('serialNo',e.target.value)} placeholder="Enter Serial No." required/></label>
-        <label>ITEM PRODUCTS<input value={form.itemProduct} onChange={e=>change('itemProduct',e.target.value)} placeholder="Enter Item Product" required/></label>
+        <label>UNIT<select value={form.unitId||''} onChange={e=>selectUnit(e.target.value)} required><option value="">Select Unit</option>{units.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></label>
         <label className="full-span">NOTES<textarea value={form.notes||''} onChange={e=>change('notes',e.target.value)} placeholder="Enter repair notes, issue, findings, or other details..." rows="3"/></label>
         <label>RECEIVED BY<input value={editing?(form.receivedBy||''):''} placeholder={editing?(form.receivedBy||'Auto recorded from encoder'):'Auto: current user'} readOnly/></label>
         <label>DATE ENCODED<input value={editing?dateText(form.createdAt):'Auto: upon saving'} readOnly/></label>
