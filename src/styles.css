@@ -3743,3 +3743,20 @@ html[data-theme="dark"] .service-unit-modal .modal-close{
     page-break-inside:avoid!important;
   }
 }
+
+/* FINAL PRINT TOP-SPACE FIX: remove the large blank area above the
+   Accomplishment form when printing to Letter. */
+@media print {
+  @page {
+    size: Letter portrait;
+    margin: 0 !important;
+  }
+  .letter-accomplishment-paper {
+    margin-top: -0.55in !important;
+    margin-bottom: 0 !important;
+    transform: none !important;
+  }
+  .premium-accomplishment-header {
+    padding-top: 2mm !important;
+  }
+}
