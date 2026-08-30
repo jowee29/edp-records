@@ -3376,3 +3376,89 @@ html[data-theme="light"] .job-done-card .job-done-pagination .job-done-page-btn.
 .app-shell .sidebar-label {
   letter-spacing: 0.01em;
 }
+
+
+/* =========================================================
+   LIGHT MODE — EMPLOYEE & ADMIN DASHBOARD
+   Clean white / light-grey surfaces with black typography.
+   Super Admin dashboard remains unchanged.
+   ========================================================= */
+html[data-theme="light"] .employee-dashboard,
+html[data-theme="light"] .admin-dashboard{
+  color:#111!important;
+}
+html[data-theme="light"] .employee-dashboard .dashboard-hero,
+html[data-theme="light"] .admin-dashboard .dashboard-hero{
+  background:#f1f1f1!important;
+  border-color:#c9a227!important;
+  color:#111!important;
+}
+html[data-theme="light"] .employee-dashboard .dashboard-hero h1,
+html[data-theme="light"] .admin-dashboard .dashboard-hero h1,
+html[data-theme="light"] .employee-dashboard .dashboard-hero p,
+html[data-theme="light"] .admin-dashboard .dashboard-hero p,
+html[data-theme="light"] .employee-dashboard .welcome-kicker,
+html[data-theme="light"] .admin-dashboard .welcome-kicker{
+  color:#111!important;
+}
+html[data-theme="light"] .employee-dashboard .hero-role,
+html[data-theme="light"] .admin-dashboard .hero-role{
+  color:#111!important;
+  background:#fff!important;
+  border-color:#c9a227!important;
+}
+html[data-theme="light"] .employee-dashboard .profile-summary,
+html[data-theme="light"] .admin-dashboard .stat-card,
+html[data-theme="light"] .admin-dashboard .action-card,
+html[data-theme="light"] .admin-dashboard .system-card{
+  background:#fff!important;
+  color:#111!important;
+  border-color:#c9a227!important;
+}
+html[data-theme="light"] .employee-dashboard .profile-summary * ,
+html[data-theme="light"] .admin-dashboard .stat-card * ,
+html[data-theme="light"] .admin-dashboard .action-card * ,
+html[data-theme="light"] .admin-dashboard .system-card *{
+  color:#111!important;
+}
+html[data-theme="light"] .employee-dashboard .profile-summary span,
+html[data-theme="light"] .employee-dashboard .profile-summary small,
+html[data-theme="light"] .employee-dashboard .action-card p,
+html[data-theme="light"] .admin-dashboard .action-card p,
+html[data-theme="light"] .admin-dashboard .stat-caption,
+html[data-theme="light"] .admin-dashboard .stat-label,
+html[data-theme="light"] .admin-dashboard .system-card-head>div>span,
+html[data-theme="light"] .admin-dashboard .system-card .status-row span{
+  color:#333!important;
+}
+html[data-theme="light"] .employee-dashboard .section-heading,
+html[data-theme="light"] .admin-dashboard .section-heading,
+html[data-theme="light"] .employee-dashboard .section-heading h2,
+html[data-theme="light"] .admin-dashboard .section-heading h2{
+  color:#111!important;
+}
+html[data-theme="light"] .employee-dashboard .action-card:hover,
+html[data-theme="light"] .admin-dashboard .action-card:hover{
+  background:#e3e3e3!important;
+  border-color:#c9a227!important;
+  color:#111!important;
+}
+html[data-theme="light"] .employee-dashboard .action-card:hover * ,
+html[data-theme="light"] .admin-dashboard .action-card:hover *{
+  color:#111!important;
+}
+html[data-theme="light"] .employee-dashboard .secondary-btn,
+html[data-theme="light"] .admin-dashboard .secondary-btn{
+  background:#c9a227!important;
+  border-color:#c9a227!important;
+  color:#fff!important;
+}
+html[data-theme="light"] .employee-dashboard .profile-avatar{
+  background:#c9a227!important;
+  color:#fff!important;
+}
+
+/* Retirement — group-scoped access */
+.retirement-group-scope-note{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:4px 9px;border:1px solid #c9a227;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+html[data-theme="light"] .retirement-group-scope-note{background:#f1f1f1;color:#111;}
+html[data-theme="dark"] .retirement-group-scope-note{background:#252525;color:#f5f5f5;}

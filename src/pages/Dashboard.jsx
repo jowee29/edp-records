@@ -48,7 +48,7 @@ export default function Dashboard(){
  const initials=name.split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
  const formattedRecent=useMemo(()=>recent.map(r=>({...r,time:r.createdAt? r.createdAt.toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'Recent'})),[recent]);
 
- if(role==='employee') return <section>
+ if(role==='employee') return <section className="employee-dashboard">
    <div className="dashboard-hero employee-hero"><div><span className="welcome-kicker">EMPLOYEE PORTAL</span><h1>Good day, {name}.</h1><p>Welcome to EDP Records. Manage your branch visits and accomplishment records from one place.</p></div><div className="hero-role"><span className="pulse"></span> EMPLOYEE</div></div>
    <div className="profile-summary"><div className="profile-avatar">{initials}</div><div><span>YOUR ACCOUNT</span><strong>{profile?.employeeId||'Employee ID not assigned'}</strong><small>{profile?.department||'Department not assigned'} • {profile?.position||'Position not assigned'}</small></div><NavLink to="/profile" className="secondary-btn">View Profile</NavLink></div>
    <div className="section-heading"><div><span>WORKSPACE</span><h2>What would you like to do?</h2></div></div>
@@ -56,7 +56,7 @@ export default function Dashboard(){
  </section>;
 
  const isSuper=role==='super_admin';
- if(!isSuper) return <section>
+ if(!isSuper) return <section className="admin-dashboard">
    <div className="dashboard-hero"><div><span className="welcome-kicker">ADMIN PORTAL</span><h1>Welcome back, {name}.</h1><p>Manage branch operations and accomplishment records for your assigned workspace.</p></div><div className="hero-role"><span className="pulse"></span> ADMIN</div></div>
    <div className="stats-grid"><Stat label="Total Branches" value={stats.branches} caption="DATABASE" icon="⌂"/><Stat label="Active Accounts" value={stats.active} caption="STATUS" icon="✓"/><Stat label="Employees" value={stats.employees} caption="TEAM" icon="◎"/><Stat label="Assigned Workspace" value={profile?.groupId?'1':'—'} caption="GROUP" icon="◆"/></div>
    <div className="dashboard-columns"><div><div className="section-heading"><div><span>QUICK ACTIONS</span><h2>Common tasks</h2></div></div><div className="action-grid"><Action to="/branches" title="Branch Management" text="Add, edit, import and view branch connectivity details." icon="⌂"/><Action to="/accomplishment" title="New Accomplishment" text="Create a branch visit accomplishment form." icon="＋"/><Action to="/accomplishment" title="Accomplishment" text="View and print saved accomplishment records." icon="↻"/></div></div><div className="system-card"><div className="system-card-head"><div><span>SYSTEM STATUS</span><h2>EDP Records</h2></div><span className="online-badge"><i/> Online</span></div><div className="status-row"><span>Firebase Database</span><strong>Connected</strong></div><div className="status-row"><span>Account Role</span><strong>ADMIN</strong></div><div className="status-row"><span>Access Level</span><strong>Workspace Access</strong></div></div></div>

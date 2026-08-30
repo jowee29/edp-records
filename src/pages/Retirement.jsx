@@ -19,19 +19,55 @@ export default function Retirement(){
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
   const [showImport,setShowImport]=useState(false),[importRows,setImportRows]=useState([]),[importFile,setImportFile]=useState(null),[importing,setImporting]=useState(false),[importError,setImportError]=useState('');
 
+  const normalizeKey=x=>String(x??'').trim().toUpperCase().replace(/[._\-/]+/g,' ').replace(/\s+/g,' ');
+
   const load=async()=>{
     if(!profile)return; setLoading(true); setError('');
     try{
-      // Retirement branch selector is shared across all groups.
-      // Keep Branch Management group-scoped, but load every branch name here.
+      const isSuper=profile.role==='super_admin';
+      const groupId=profile.groupId||'unassigned';
+
+      // Branches are group-scoped for regular users. Super Admin can select from all branches.
       const bcol=collection(db,'branches');
-      let bq=query(bcol,orderBy('branchName','asc'));
-      let snap; try{snap=await getDocs(bq)}catch(e){snap=await getDocs(bcol)}
+      let bq=isSuper
+        ? query(bcol,orderBy('branchName','asc'))
+        : query(bcol,where('groupId','==',groupId),orderBy('branchName','asc'));
+      let snap;
+      try{snap=await getDocs(bq)}catch(e){
+        snap=await getDocs(bcol);
+        if(!isSuper) snap={docs:snap.docs.filter(d=>(d.data()?.groupId||'unassigned')===groupId)};
+      }
       setBranches(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.branchName||'').localeCompare(String(b.branchName||''))));
+
+      // Retirement access is enforced from the user's GROUP -> BRANCH membership.
+      // This is intentionally stricter than trusting retirements.groupId because older
+      // records may have a missing/incorrect groupId. Regular users can only see records
+      // whose branch belongs to their assigned group.
+      const branchList=snap.docs.map(d=>({id:d.id,...d.data()}));
+      const allowedBranchIds=new Set(branchList.map(b=>b.id));
+      const allowedBranchNames=new Set(branchList.map(b=>normalizeKey(b.branchName)));
+
       const rcol=collection(db,'retirements');
-      let rq=query(rcol,orderBy('createdAt','desc'));
-      try{snap=await getDocs(rq)}catch(e){snap=await getDocs(rcol)}
-      setItems(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
+      let retirementSnap;
+      if(isSuper){
+        retirementSnap=await getDocs(query(rcol,orderBy('createdAt','desc')));
+      }else{
+        try{
+          retirementSnap=await getDocs(query(rcol,where('groupId','==',groupId),orderBy('createdAt','desc')));
+        }catch(e){
+          retirementSnap=await getDocs(rcol);
+        }
+      }
+      const retirementList=retirementSnap.docs.map(d=>({id:d.id,...d.data()}));
+      const visibleRetirements=isSuper
+        ? retirementList
+        : retirementList.filter(r=>{
+            // Primary check: the retirement's branch must be one of this group's branches.
+            if(r.branchId) return allowedBranchIds.has(r.branchId);
+            // Legacy fallback for records without branchId.
+            return allowedBranchNames.has(normalizeKey(r.branchName));
+          });
+      setItems(visibleRetirements.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
     }catch(e){setError(e.message)}finally{setLoading(false)}
   };
   useEffect(()=>{load()},[profile]);
@@ -96,7 +132,6 @@ export default function Retirement(){
     const stamp=new Date().toISOString().slice(0,10);XLSX.writeFile(wb,`EDP_Retirement_${stamp}.xlsx`);
     try{await audit({action:'EXPORT_RETIREMENTS',details:`Exported ${rows.length} retirement records to Excel`})}catch(e){console.warn('Audit export failed',e)}
   };
-  const normalizeKey=x=>String(x??'').trim().toUpperCase().replace(/[._\-/]+/g,' ').replace(/\s+/g,' ');
   const toImportRow=row=>{
     const get=(...keys)=>{for(const k of keys){const target=normalizeKey(k);const found=Object.keys(row).find(h=>normalizeKey(h)===target);if(found!==undefined)return row[found]}return ''};
     return {branchName:get('BRANCH NAME','BRANCH'),assetCode:get('ASSET CODE'),serialNo:get('SERIAL NO.','SERIAL NUMBER'),itemProduct:get('ITEM PRODUCTS','ITEM PRODUCT','PRODUCT'),defectiveNote:get('DEFECTIVE NOTE','DEFECT'),datePurchase:get('DATE PURCHASE'),dateRetired:get('DATE RETIRED'),receivedBy:get('RECEIVED BY'),receivedDate:get('RECEIVED DATE'),status:(String(get('STATUS')||NOT_REPLACED).trim()===REPLACED?REPLACED:NOT_REPLACED)};
@@ -149,7 +184,7 @@ export default function Retirement(){
   useEffect(()=>{setPage(1)},[search]);
 
   return <>
-    <div className="page-title-row"><div><span className="eyebrow">ASSET MANAGEMENT</span><h1>Retirement</h1><p>Record and monitor retired assets for all authorized branch users.</p></div><div className="page-actions no-print"><button className="ghost-btn" type="button" onClick={exportRetirements}>⇩ Export Excel</button><button className="ghost-btn" type="button" onClick={()=>{setImportRows([]);setImportFile(null);setImportError('');setShowImport(true)}}>⇧ Import Excel</button><button className="amber-btn" onClick={()=>{reset();setModalOpen(true);document.body.classList.add('modal-open')}}>＋ Add Retirement Record</button></div></div>
+    <div className="page-title-row"><div><span className="eyebrow">ASSET MANAGEMENT</span><h1>Retirement</h1><p>View and manage retirement records within your group. Employees can add new retirement records.</p></div><div className="page-actions no-print"><button className="ghost-btn" type="button" onClick={exportRetirements}>⇩ Export Excel</button><button className="ghost-btn" type="button" onClick={()=>{setImportRows([]);setImportFile(null);setImportError('');setShowImport(true)}}>⇧ Import Excel</button><button className="amber-btn" onClick={()=>{reset();setModalOpen(true);document.body.classList.add('modal-open')}}>＋ Add Retirement Record</button></div></div>
     {error&&<div className="error no-print">{error}</div>}
     {saved&&<div className="success no-print">Retirement record saved successfully.</div>}
     {showImport&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowImport(false)}}>
@@ -167,7 +202,7 @@ export default function Retirement(){
 
     {modalOpen && <div className="retirement-modal-backdrop no-print" onMouseDown={e=>{if(e.target===e.currentTarget){closeModal()}}}>
       <div className="retirement-modal" role="dialog" aria-modal="true" aria-labelledby="retirement-modal-title">
-        <div className="retirement-modal-header"><div><span className="eyebrow">ASSET MANAGEMENT</span><h2 id="retirement-modal-title">{editing?'Edit Retirement Record':'Add Retirement Record'}</h2><p className="muted">All fields are stored in Firebase. Branch names are available to all authorized groups.</p></div><button type="button" className="modal-close" aria-label="Close" onClick={closeModal}>×</button></div>
+        <div className="retirement-modal-header"><div><span className="eyebrow">ASSET MANAGEMENT</span><h2 id="retirement-modal-title">{editing?'Edit Retirement Record':'Add Retirement Record'}</h2><p className="muted">This retirement record is saved under your group. Branches shown here follow your group access.</p></div><button type="button" className="modal-close" aria-label="Close" onClick={closeModal}>×</button></div>
         <form className="retirement-form" onSubmit={async e=>{const ok=await save(e);if(ok)setModalOpen(false);if(ok)document.body.classList.remove('modal-open')}}>
           <div className="retirement-grid">
             <label className="field span-2"><span>Branch Name</span><select value={form.branchId} onChange={e=>selectBranch(e.target.value)} required><option value="">Select branch...</option>{branches.map(b=><option key={b.id} value={b.id}>{b.branchName}</option>)}</select></label>
