@@ -272,7 +272,7 @@ export default function JobOrder(){
       <div className="pagination-row"><span>Showing {filtered.length?((safePage-1)*PAGE_SIZE+1):0}–{Math.min(safePage*PAGE_SIZE,filtered.length)} of {filtered.length}</span><div><button className="page-btn" disabled={safePage===1} onClick={()=>setPage(p=>Math.max(1,p-1))}>‹</button><b>{safePage} / {totalPages}</b><button className="page-btn" disabled={safePage===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>›</button></div></div>
     </div>
 
-    {viewing&&(<div className="modal-backdrop" role="presentation"><div className="modal branch-modal" role="dialog" aria-modal="true">
+    {viewing&&(<div className="modal-backdrop" role="presentation"><div className="modal branch-modal view-job-order-modal" role="dialog" aria-modal="true">
       <div className="modal-header"><div><p className="eyebrow">JOB ORDER</p><h2>View Job Order</h2><p className="subtext">Details at current repair status.</p></div><button className="modal-close" onClick={closeView}>×</button></div>
       <div className="modal-body">
         <div className="view-branch-summary"><span>BRANCH NAME</span><strong>{val(viewing.branchName)||'—'}</strong><span>STATUS</span><strong><span className={statusClass(viewing.status)}>{viewing.status||'Pending'}</span></strong></div>
@@ -281,7 +281,6 @@ export default function JobOrder(){
           <div><span>ITEM PRODUCTS</span><strong>{val(viewing.itemProduct)||'—'}</strong></div><div className="job-notes-detail"><span>NOTES</span><strong>{val(viewing.notes)||'—'}</strong></div><div><span>RECEIVED BY</span><strong>{val(viewing.receivedBy)||'—'}</strong></div>
           <div><span>DATE ENCODED</span><strong>{dateText(viewing.createdAt)}</strong></div>
         </div>
-        <div className="job-status-actions"><span>CHANGE STATUS</span><div>{STATUSES.map(s=><button key={s} type="button" className={`table-action ${viewing.status===s?'edit':''}`} onClick={()=>updateStatus(viewing,s)}>{s}</button>)}</div></div>
       </div>
       <div className="modal-footer"><button className="ghost-btn" onClick={closeView}>Close</button><button className="table-action edit" onClick={()=>{closeView();openEdit(viewing)}}>Edit</button><button className="table-action danger" onClick={()=>remove(viewing)}>Delete</button></div>
     </div></div>)}

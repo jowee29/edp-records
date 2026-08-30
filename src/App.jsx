@@ -81,7 +81,12 @@ function useNewRecordBadges(profile){
     }).length;
   });
   const markSeen=key=>{
-    const next={...seen,[key]:Date.now()};
+    // Mark the newest record currently known as seen. This prevents an old
+    // notification from reappearing after the user has opened that section,
+    // while allowing genuinely new records to show a badge later.
+    const current=records[key]||[];
+    const latest=current.reduce((m,x)=>Math.max(m,x.createdAt?.toMillis?.() ?? (x.createdAt?.seconds ? x.createdAt.seconds*1000 : 0)),0);
+    const next={...seen,[key]:Math.max(Number(seen[key]||0),latest)};
     setSeen(next);localStorage.setItem('edp-nav-seen',JSON.stringify(next));
   };
   return {counts,markSeen};
@@ -144,7 +149,7 @@ function Layout({children}){
       <button className="sidebar-toggle-btn" type="button" onClick={()=>setSidebarHidden(v=>!v)} title={sidebarHidden?'Show menu':'Hide menu'} aria-label={sidebarHidden?'Show menu':'Hide menu'}>{sidebarHidden?'☰':'‹'} <span>{sidebarHidden?'Show Menu':'Hide Menu'}</span></button>
       <div className="theme-switcher">
         <button className={`theme-btn ${theme==='dark'?'active':''}`} onClick={()=>setTheme('dark')} title="Dark Mode">☾ <span>Dark</span></button>
-        <button className={`theme-btn ${theme==='pink'?'active':''}`} onClick={()=>setTheme('pink')} title="Pink Mode">♡ <span>Pink</span></button>
+        <button className={`theme-btn ${theme==='light'?'active':''}`} onClick={()=>setTheme('light')} title="Light Mode">☼ <span>Light</span></button>
       </div>
       <div className="sidebar-section">
         {navGroups.map(group=><div className="sidebar-group" key={group.label}>
