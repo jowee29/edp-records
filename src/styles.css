@@ -214,6 +214,17 @@
 @media(max-width:900px){.branch-stat-grid{grid-template-columns:repeat(2,1fr)}.branch-toolbar{align-items:stretch;flex-direction:column}.branch-filters{margin-left:0;display:grid;grid-template-columns:repeat(3,1fr)}.branch-filters select,.clear-filter-btn{width:100%}.branch-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.details-items{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.branch-stat-grid{grid-template-columns:1fr 1fr;gap:7px}.branch-stat-card{min-height:78px;padding:11px}.branch-stat-card strong{font-size:20px}.branch-toolbar{padding:8px}.branch-filters{grid-template-columns:1fr}.branch-list-head{align-items:flex-start;gap:5px;flex-direction:column}.branch-list-note{display:none}.branch-form-grid,.details-items{grid-template-columns:1fr}.field-wide,.detail-wide{grid-column:auto}.branch-form-actions,.details-actions{flex-direction:column}.branch-form-actions button,.details-actions button{width:100%;min-height:42px}.branch-details-header .details-title-row{align-items:flex-start;flex-direction:column;gap:5px}.file-picker{min-height:50px}.import-summary{align-items:flex-start;flex-direction:column;gap:3px}}
 
+/* EDP Records accomplishment print/header refinement */
+.lav-form-title{margin-top:10px;text-align:center;border-top:1px solid #e1e5e6;padding-top:10px}
+.lav-form-title>span{display:block;color:#9b680e;font-size:9px;font-weight:900;letter-spacing:.18em}
+.lav-form-title h2{margin:3px 0 0;font-size:18px;line-height:1.1;letter-spacing:.03em;color:#182023}
+.lav-form-title p{margin:4px 0 0;color:#6c777b;font-size:8px}
+@media print{
+  .lav-form-title{margin-top:3mm;padding-top:2mm}
+  .lav-form-title h2{font-size:15px}
+  .lav-form-title p{font-size:7px}
+}
+
 /* New Branch Visit Accomplishment Form */
 .modern-accomplishment-paper{width:min(794px,100%);margin:0 auto;background:#fff;color:#182023;border:1px solid #d9dee0;box-shadow:0 14px 40px rgba(0,0,0,.18);border-radius:4px;overflow:hidden}
 .form-cover{padding:28px 34px 22px;background:#fff;border-bottom:5px solid #f2aa22;position:relative}
@@ -3703,5 +3714,32 @@ html[data-theme="dark"] .service-unit-modal .modal-close{
   .accomplishment-view-modal .modal-footer,
   .paper-save-actions {
     display: none !important;
+  }
+}
+
+/* Accomplishment confirmation/signature section as a footer */
+.letter-accomplishment-paper{
+  display:flex!important;
+  flex-direction:column!important;
+}
+.letter-accomplishment-paper .lav-confirm{
+  margin-top:auto!important;
+  margin-left:22px!important;
+  margin-right:22px!important;
+  margin-bottom:0!important;
+  padding:12px 0 8px!important;
+  border-top:1px solid #dfe3e3!important;
+  flex:none!important;
+}
+@media print{
+  .letter-accomplishment-paper .lav-confirm{
+    margin-top:auto!important;
+    margin-left:8mm!important;
+    margin-right:8mm!important;
+    margin-bottom:0!important;
+    padding:4mm 0 2mm!important;
+    border-top:0.3mm solid #777!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
   }
 }

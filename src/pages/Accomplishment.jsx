@@ -41,7 +41,11 @@ export default function Accomplishment({ embedded=false, onSaved }={}){
             <div><span>BRANCH</span><b>{branch?.branchName || form.branchVisited || '________________'}</b></div>
           </div>
         </div>
-        <div className="lav-form-title"><span>BRANCH VISIT</span><h2>ACCOMPLISHMENT FORM</h2><p>Branch visit documentation • Letter printable record</p></div>
+        <div className="lav-form-title">
+          <span>EDP RECORDS</span>
+          <h2>BRANCH VISIT ACCOMPLISHMENT FORM</h2>
+          <p>Field Service Management • Official Accomplishment Record</p>
+        </div>
       </div>
       <div className="lav-personnel lav-personnel-premium">
         <label>TEAM LEADER:<input value={form.teamLeader} onChange={e=>change('teamLeader',e.target.value)} placeholder="Enter team leader name" /></label>
