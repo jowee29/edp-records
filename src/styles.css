@@ -3774,3 +3774,7 @@ html[data-theme="dark"] .service-unit-modal .modal-close{
   .letter-accomplishment-paper .lav-control-number{font-size:8px;margin-bottom:2mm}
   .letter-accomplishment-paper .lav-control-number b{font-size:9px}
 }
+
+/* Control No. red */
+.letter-accomplishment-paper .lav-control-number span,
+.letter-accomplishment-paper .lav-control-number b{color:#d00000!important;}
