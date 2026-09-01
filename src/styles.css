@@ -344,3 +344,34 @@ table{border-radius:10px;overflow:hidden}
 .premium-stats-grid{margin-bottom:22px}.premium-stat{position:relative;overflow:hidden;min-height:108px}.premium-stat:after{content:"";position:absolute;width:80px;height:80px;border-radius:50%;right:-36px;bottom:-44px;background:#f5b21f08}.stat-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}.stat-trend{font-size:8px;color:#6fbd98;font-weight:900}.premium-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,.78fr);gap:16px}.premium-heading{margin-bottom:10px}.section-note{font-size:8px;color:#586568;font-weight:900;letter-spacing:.1em}.premium-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.premium-actions .action-card{min-height:94px}.action-accent{border-color:#4a3b1d;background:linear-gradient(135deg,#181a19,#171511)}.action-accent .action-icon{background:#f1b329;color:#17130a}.overview-card,.activity-card{margin-top:16px;background:#11181a;border:1px solid #273134;border-radius:12px;padding:18px}.overview-card .section-heading{margin-bottom:16px}.distribution{display:grid;grid-template-columns:150px 1fr;gap:22px;align-items:center}.distribution-total{border-right:1px solid #293234;min-height:105px;display:flex;flex-direction:column;justify-content:center}.distribution-total strong{font-size:38px;line-height:1;color:#f2f4f4}.distribution-total span{color:#697578;font-size:9px;margin-top:7px}.distribution-bars{display:flex;flex-direction:column;gap:14px}.bar-row{display:grid;grid-template-columns:72px 1fr 28px;align-items:center;gap:10px;font-size:9px;color:#7e898d}.bar-row>div{height:7px;border-radius:99px;background:#20292b;overflow:hidden}.bar-row i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#8b671b,#f4bb39);min-width:4px}.bar-row b{text-align:right;color:#d6dddd;font-size:10px}.premium-system{margin:0;padding:18px}.health-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-top:1px solid #242e30;font-size:9px}.health-item span{color:#879295}.health-item span i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#69bf92;margin-right:7px}.health-item b{font-size:8px;color:#72bd99}.health-score{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #242e30;margin-top:4px;padding-top:15px}.health-score strong{display:block;font-size:20px;color:#f0f3f3}.health-score span{display:block;color:#667376;font-size:8px;margin-top:2px}.score-ring{width:35px;height:35px;border:2px solid #4b7b62;border-radius:50%;display:grid;place-items:center;color:#78c39e;font-weight:900}.activity-card{margin-top:16px}.activity-card .section-heading>a{font-size:9px;color:#d8a331;text-decoration:none;font-weight:900}.activity-row{display:flex;gap:10px;padding:11px 0;border-top:1px solid #242e30}.activity-dot{flex:0 0 22px;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:#211c11;color:#e6b238;font-size:11px}.activity-row strong{display:block;color:#dce2e2;font-size:9px}.activity-row p{margin:3px 0;color:#697578;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:205px}.activity-row small{color:#515d60;font-size:7px}.empty-activity{color:#667376;font-size:9px;padding:15px 0}
 @media(max-width:900px){.premium-grid{grid-template-columns:1fr}.hero-profile{min-width:0}.premium-hero{align-items:flex-start}.premium-side{display:grid;grid-template-columns:1fr 1fr;gap:12px}.premium-side .activity-card{margin-top:0}.overview-card{margin-top:12px}}
 @media(max-width:600px){.premium-hero{padding:22px 19px;display:block}.premium-hero h1{font-size:25px}.welcome-line{flex-wrap:wrap}.hero-meta{flex-direction:column;gap:7px}.hero-profile{margin-top:19px}.premium-actions{grid-template-columns:1fr}.distribution{grid-template-columns:1fr}.distribution-total{border-right:0;border-bottom:1px solid #293234;padding-bottom:14px;min-height:auto}.premium-side{display:block}.premium-side .activity-card{margin-top:12px}.premium-stats-grid{grid-template-columns:repeat(2,1fr)}.stat-foot{display:block}.stat-trend{display:block;margin-top:3px}.premium-stat{min-height:104px}}
+
+/* Mobile navigation drawer */
+.mobile-menu-btn{display:none}
+.mobile-menu-backdrop,.mobile-drawer{display:none}
+@media (max-width:900px){
+  .mobile-topbar{position:sticky;top:0}
+  .mobile-menu-btn{display:flex;width:40px;height:40px;padding:9px;flex-direction:column;justify-content:center;gap:5px;background:#151c1e;border:1px solid #2b3638;border-radius:8px;color:#f5b21f}
+  .mobile-menu-btn span{display:block;height:2px;width:20px;background:currentColor;border-radius:2px}
+  .mobile-menu-backdrop{display:block;position:fixed;inset:0;background:#0009;opacity:0;visibility:hidden;transition:.2s;z-index:80}
+  .mobile-menu-backdrop.show{opacity:1;visibility:visible}
+  .mobile-drawer{display:flex;position:fixed;left:0;top:0;bottom:0;width:min(310px,86vw);background:#0e1314;border-right:1px solid #293336;z-index:90;transform:translateX(-105%);transition:transform .22s ease;flex-direction:column;padding:22px 16px 18px;overflow-y:auto;box-shadow:18px 0 40px #0008}
+  .mobile-drawer.open{transform:translateX(0)}
+  .mobile-drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .mobile-drawer-head .sidebar-brand{padding:0}
+  .mobile-drawer-head .sidebar-brand img{width:38px;height:38px}
+  .mobile-drawer-head .sidebar-brand strong{font-size:15px}
+  .mobile-drawer-head .sidebar-brand span{font-size:8px;color:#d49c25}
+  .mobile-close-btn{width:36px;height:36px;border:1px solid #303b3e;border-radius:8px;background:#151c1e;color:#aeb8ba;font-size:24px;line-height:1}
+  .mobile-drawer .sidebar-label{padding-left:12px}
+  .mobile-drawer .side-nav{gap:5px}
+  .mobile-drawer .side-link{padding:13px 12px;font-size:12px}
+  .mobile-drawer-bottom{margin-top:auto;border-top:1px solid #222b2e;padding-top:14px}
+  .mobile-drawer-bottom .logout-link{border-top:0;padding-top:12px}
+}
+@media (max-width:420px){
+  .mobile-topbar{padding:0 12px}
+  .mobile-topbar .sidebar-brand{gap:8px}
+  .mobile-topbar .sidebar-brand strong{font-size:13px}
+  .mobile-topbar .sidebar-brand span{font-size:7px}
+  .mobile-avatar{width:32px;height:32px}
+}
