@@ -1,7 +1,7 @@
 import edpLogo from './assets/edp-logo.png';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 import { useAuth, audit } from './auth';
-import { Login, Signup, ForgotPassword } from './pages/Auth';
+import { Login, ForgotPassword } from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
@@ -94,7 +94,6 @@ export default function App(){
   return <Routes>
     <Route path="/login" element={user?<Navigate to="/dashboard" replace/>:<Login/>}/>
 
-    <Route path="/signup" element={user?<Navigate to="/dashboard" replace/>:<Signup/>}/>
     <Route path="/forgot-password" element={user?<Navigate to="/dashboard" replace/>:<ForgotPassword/>}/>
     <Route path="/dashboard" element={<Protected><Layout><Dashboard/></Layout></Protected>}/>
     <Route path="/users" element={<Protected roles={['super_admin']}><Layout><Users/></Layout></Protected>}/>
