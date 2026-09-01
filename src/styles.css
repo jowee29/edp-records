@@ -345,17 +345,16 @@ table{border-radius:10px;overflow:hidden}
 @media(max-width:900px){.premium-grid{grid-template-columns:1fr}.hero-profile{min-width:0}.premium-hero{align-items:flex-start}.premium-side{display:grid;grid-template-columns:1fr 1fr;gap:12px}.premium-side .activity-card{margin-top:0}.overview-card{margin-top:12px}}
 @media(max-width:600px){.premium-hero{padding:22px 19px;display:block}.premium-hero h1{font-size:25px}.welcome-line{flex-wrap:wrap}.hero-meta{flex-direction:column;gap:7px}.hero-profile{margin-top:19px}.premium-actions{grid-template-columns:1fr}.distribution{grid-template-columns:1fr}.distribution-total{border-right:0;border-bottom:1px solid #293234;padding-bottom:14px;min-height:auto}.premium-side{display:block}.premium-side .activity-card{margin-top:12px}.premium-stats-grid{grid-template-columns:repeat(2,1fr)}.stat-foot{display:block}.stat-trend{display:block;margin-top:3px}.premium-stat{min-height:104px}}
 
-/* Compact data tables + pagination */
-.table-wrap table{min-width:720px}
-.table-wrap th,.table-wrap td{padding:7px 8px;font-size:10px;line-height:1.25}
-.table-wrap th{font-size:8px}
-.table-avatar{width:24px;height:24px}
-.actions{gap:8px}
-.table-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 8px;border-top:1px solid #252e31;background:#13191b}
-.pagination-info{color:#687478;font-size:9px;white-space:nowrap}
-.pagination-controls{display:flex;align-items:center;gap:6px}
-.pagination-btn{width:25px;height:25px;padding:0;border:1px solid #303a3d;border-radius:4px;background:#182023;color:#bfc7c9;font-size:15px;line-height:1}
-.pagination-btn:hover:not(:disabled){border-color:#f5a623;color:#f5a623}
-.pagination-btn:disabled{opacity:.35;cursor:not-allowed}
-.pagination-page{color:#899498;font-size:9px;white-space:nowrap}
-@media(max-width:620px){.table-pagination{padding:6px}.pagination-info{font-size:8px}.pagination-page{font-size:8px}.pagination-btn{width:23px;height:23px}}
+/* Retirement Records */
+.retirement-form{padding:14px;margin-bottom:10px}
+.retirement-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.retirement-grid .field{display:flex;flex-direction:column;gap:4px}
+.retirement-grid .field span{color:#7f8b8f;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.retirement-grid .span-2{grid-column:span 2}
+.retirement-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.retirement-table table{min-width:1250px}
+.retirement-note{min-width:180px;max-width:280px;white-space:normal;line-height:1.3}
+.retired-pill{display:inline-flex;align-items:center;padding:3px 6px;border:1px solid #493d28;background:#2b2418;color:#f0b85d;border-radius:3px;font-size:9px;font-weight:800}
+@media(max-width:900px){.retirement-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.retirement-grid .span-2{grid-column:span 2}}
+@media(max-width:600px){.retirement-grid{grid-template-columns:1fr}.retirement-grid .span-2{grid-column:span 1}.retirement-actions{flex-wrap:wrap}.retirement-actions button{flex:1;min-width:110px}}
+.table-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border-top:1px solid #252e31;color:#707d80;font-size:10px}.table-pagination>div{display:flex;align-items:center;gap:7px}.table-pagination .ghost-btn{padding:6px 9px;font-size:10px}.table-pagination button:disabled{opacity:.4;cursor:not-allowed}

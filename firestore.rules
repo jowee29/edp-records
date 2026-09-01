@@ -38,6 +38,12 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
     }
 
+    match /retirements/{retirementId} {
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
+      allow read: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
+      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
+    }
+
     match /auditLogs/{logId} {
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow read: if isSuperAdmin();
