@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { collection, doc, getDocs, query, orderBy, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { Link } from 'react-router-dom';
 import { useAuth, audit } from '../auth';
 
 export default function Profile(){
@@ -27,5 +28,6 @@ export default function Profile(){
  <label>Group<select value={form.groupId||''} onChange={e=>setForm({...form,groupId:e.target.value})} disabled={loadingGroups}><option value="">Select Group</option>{groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
  <label>Role<input value={form.role||''} disabled/></label>
  <button className="amber-btn">Save Profile</button>{message&&<p className="success">{message}</p>}
- </form></div></section>
+ </form></div>
+ <div className="content-card profile-card" style={{marginTop:16}}><div className="panel-heading"><div><p className="eyebrow">SECURITY</p><h2>Password</h2><p className="subtext">{profile?.role==='super_admin'?'Super Admin can change the password anytime.':'Change your password when required.'}</p></div><Link className="amber-btn" to="/change-password">Change Password</Link></div></div></section>
 }

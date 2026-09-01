@@ -1,7 +1,7 @@
 import edpLogo from './assets/edp-logo.png';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 import { useAuth, audit } from './auth';
-import { Login, ForgotPassword } from './pages/Auth';
+import { Login, ForgotPassword, ChangePassword } from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
@@ -17,6 +17,7 @@ function Protected({children,roles}){
   if(!user)return <Navigate to="/login" replace/>;
   if(!profile)return <div className="screen-message"><div className="dark-card"><h2>Account profile missing</h2><p>Please contact an administrator.</p></div></div>;
   if(profile.status==='inactive')return <div className="screen-message"><div className="dark-card"><h2>Account inactive</h2><p>Please contact an administrator.</p></div></div>;
+  if(profile.mustChangePassword && profile.role !== 'super_admin' && window.location.pathname !== '/change-password') return <Navigate to="/change-password" replace/>;
   if(roles&&!roles.includes(profile.role))return <Navigate to="/dashboard" replace/>;
   return children;
 }
@@ -95,6 +96,7 @@ export default function App(){
     <Route path="/login" element={user?<Navigate to="/dashboard" replace/>:<Login/>}/>
 
     <Route path="/forgot-password" element={user?<Navigate to="/dashboard" replace/>:<ForgotPassword/>}/>
+    <Route path="/change-password" element={<Protected><ChangePassword/></Protected>}/>
     <Route path="/dashboard" element={<Protected><Layout><Dashboard/></Layout></Protected>}/>
     <Route path="/users" element={<Protected roles={['super_admin']}><Layout><Users/></Layout></Protected>}/>
     <Route path="/branches" element={<Protected roles={['admin','employee','super_admin']}><Layout><Branches/></Layout></Protected>}/>

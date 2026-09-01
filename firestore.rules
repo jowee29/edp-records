@@ -11,7 +11,7 @@ service cloud.firestore {
       allow create: if (isSuperAdmin() && request.resource.data.role in ['admin','employee']) || (signedIn() && request.auth.uid == uid && request.resource.data.role == 'employee');
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || resource.data.position == 'Team Leader');
       allow update: if signedIn() && (
-        (request.auth.uid == uid && request.resource.data.role == resource.data.role) ||
+        (request.auth.uid == uid && request.resource.data.role == resource.data.role && request.resource.data.mustChangePassword == resource.data.mustChangePassword) ||
         (isSuperAdmin() && (
           (resource.data.role == 'super_admin' && request.resource.data.role == 'super_admin') ||
           (resource.data.role != 'super_admin' && request.resource.data.role in ['admin','employee'])
