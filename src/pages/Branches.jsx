@@ -55,6 +55,8 @@ export default function Branches(){
   const [importFile,setImportFile]=useState(null);
   const [importing,setImporting]=useState(false);
   const [importError,setImportError]=useState('');
+  const [currentPage,setCurrentPage]=useState(1);
+  const rowsPerPage=10;
 
   const load=async()=>{
     setLoading(true); setError('');
@@ -95,6 +97,15 @@ export default function Branches(){
       return (!q||hay.includes(q)) && (typeFilter==='ALL'||String(b.branchType||'').toUpperCase()===typeFilter) && (companyFilter==='ALL'||String(b.company||'')===companyFilter) && (connFilter==='ALL'||String(b.connType||'').toLowerCase()===connFilter.toLowerCase());
     });
   },[branches,search,typeFilter,companyFilter,connFilter]);
+
+  const totalPages=Math.max(1,Math.ceil(filtered.length/rowsPerPage));
+  const paginated=useMemo(()=>{
+    const safePage=Math.min(currentPage,totalPages);
+    const start=(safePage-1)*rowsPerPage;
+    return filtered.slice(start,start+rowsPerPage);
+  },[filtered,currentPage,totalPages]);
+  useEffect(()=>{setCurrentPage(1)},[search,typeFilter,companyFilter,connFilter]);
+  useEffect(()=>{if(currentPage>totalPages)setCurrentPage(totalPages)},[currentPage,totalPages]);
 
   const change=(key,value)=>setForm(f=>({...f,[key]:value}));
   const reset=()=>{setForm({...blank});setEditing(null);setEditingBranch(null);setError('')};
@@ -209,13 +220,21 @@ export default function Branches(){
     <div className="branch-list-head"><div><strong>Branch Records</strong><span>{filtered.length} shown of {branches.length}</span></div><span className="branch-list-note">Use View for complete connectivity details.</span></div>
     <div className="content-card table-wrap branch-table">
       <table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NUMBER</th><th>ACTIONS</th></tr></thead>
-        <tbody>{filtered.map(b=><tr key={b.id}>
+        <tbody>{paginated.map(b=><tr key={b.id}>
           <td><div className="branch-name-cell"><b>{b.branchName||'—'}</b></div></td>
           <td><span className={`branch-type-badge ${String(b.branchType||'').toLowerCase().replace(/\s+/g,'-')}`}>{b.branchType||'—'}</span></td>
           <td>{b.company||'—'}</td><td>{b.accountNo||'—'}</td>
           <td><div className="actions"><button className="link-btn view-link" type="button" onClick={()=>setViewing(b)}>View</button><button className="link-btn" type="button" onClick={()=>openEdit(b)}>Edit</button><button className="link-btn danger-link" type="button" onClick={()=>remove(b)}>Delete</button></div></td>
         </tr>)}</tbody>
       </table>
+      {!loading&&filtered.length>0&&<div className="branch-pagination">
+        <span>Showing <b>{(currentPage-1)*rowsPerPage+1}</b>–<b>{Math.min(currentPage*rowsPerPage,filtered.length)}</b> of <b>{filtered.length}</b></span>
+        <div className="pagination-controls">
+          <button className="ghost-btn pagination-btn" type="button" disabled={currentPage===1} onClick={()=>setCurrentPage(p=>Math.max(1,p-1))}>Previous</button>
+          <span className="page-number">Page {currentPage} of {totalPages}</span>
+          <button className="ghost-btn pagination-btn" type="button" disabled={currentPage===totalPages} onClick={()=>setCurrentPage(p=>Math.min(totalPages,p+1))}>Next</button>
+        </div>
+      </div>}
       {!loading&&!filtered.length&&<div className="branch-empty"><div className="branch-empty-icon">⌕</div><strong>{branches.length?'No matching branches':'No branch records yet'}</strong><p>{branches.length?'Try changing your search or filters.':'Add your first branch or import records from Excel/CSV.'}</p>{activeFilters?<button className="ghost-btn" type="button" onClick={clearFilters}>Clear Filters</button>:<button className="amber-btn" type="button" onClick={openAdd}>+ Add Branch</button>}</div>}
       {loading&&<div className="branch-empty"><strong>Loading branches...</strong><p>Please wait while records are loaded from Firebase.</p></div>}
     </div>
