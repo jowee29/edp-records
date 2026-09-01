@@ -1,0 +1,17 @@
+EDP RECORDS - GITHUB/FIREBASE DEPLOYMENT
+
+This project already contains the premium Super Admin dashboard source and production bundle.
+The GitHub Actions workflow has been fixed to run npm ci before npm run build.
+
+Upload/push these files to the main branch:
+
+git add .
+git commit -m "Fix automatic Firebase deployment and premium dashboard"
+git push origin main
+
+Then open GitHub -> Actions and wait for "Deploy to Firebase Hosting on merge" to finish.
+
+IMPORTANT:
+- The workflow deploys the main branch.
+- firebase.json uses dist as the Firebase Hosting public directory.
+- Do not manually edit files inside dist; GitHub Actions rebuilds dist from src.
