@@ -34,9 +34,9 @@ export default function Accomplishment(){
       <section className="form-section visit-section">
         <div className="section-heading"><span>01</span><div><b>VISIT INFORMATION</b><small>Basic details of the branch visit and assigned personnel</small></div></div>
         <div className="form-grid four">
-          <label className="field span-2"><span>BRANCH VISITED</span><select value={form.branchId} onChange={e=>{change('branchId',e.target.value);change('branchVisited',branches.find(b=>b.id===e.target.value)?.branchName||'')}} required><option value="">Select branch...</option>{branches.map(b=><option key={b.id} value={b.id}>{b.branchName}</option>)}</select></label>
-           <label className="field"><span>TEAM LEADER</span><input value={form.teamLeader} onChange={e=>change('teamLeader',e.target.value)} /></label>
-          <label className="field span-2"><span>HMS STAFF</span><input value={form.hmsStaff} onChange={e=>change('hmsStaff',e.target.value)} /></label>
+          <label className="field span-2 visit-branch-field"><span>BRANCH VISITED</span><select value={form.branchId} onChange={e=>{change('branchId',e.target.value);change('branchVisited',branches.find(b=>b.id===e.target.value)?.branchName||'')}} required><option value="">Select branch...</option>{branches.map(b=><option key={b.id} value={b.id}>{b.branchName}</option>)}</select></label>
+           <label className="field team-leader-field"><span>TEAM LEADER</span><input value={form.teamLeader} onChange={e=>change('teamLeader',e.target.value)} /></label>
+          <label className="field span-2 hms-staff-field"><span>HMS STAFF</span><input value={form.hmsStaff} onChange={e=>change('hmsStaff',e.target.value)} /></label>
         </div>
       </section>
 

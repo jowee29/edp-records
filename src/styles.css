@@ -888,3 +888,22 @@ textarea[id="finding"] {
   outline: none !important;
   background: transparent !important;
 }
+
+/* Exact bottom border for Accomplishment Visit Information fields */
+.modern-accomplishment-paper .visit-branch-field select,
+.modern-accomplishment-paper .team-leader-field input,
+.modern-accomplishment-paper .hms-staff-field input {
+  border: 0 !important;
+  border-bottom: 1px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+.modern-accomplishment-paper .visit-branch-field select:focus,
+.modern-accomplishment-paper .team-leader-field input:focus,
+.modern-accomplishment-paper .hms-staff-field input:focus {
+  border: 0 !important;
+  border-bottom: 1px solid #000 !important;
+  box-shadow: none !important;
+}
