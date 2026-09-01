@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, secondaryAuth } from '../firebase';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAuth, audit } from '../auth';
+import { usePagination, TablePagination } from '../components/TablePagination';
 
 const blank={name:'',username:'',password:'',role:'employee',employeeId:'',department:'',position:'',groupId:'',groupName:'',status:'active'};
 const authEmail=username=>`${String(username).trim().toLowerCase()}@edp-records.local`;
@@ -20,27 +20,12 @@ export default function Users(){
      if(!/^[a-z0-9._-]{3,30}$/.test(username)) throw new Error('Username must be 3-30 characters and use only letters, numbers, dot, underscore, or dash.');
      const duplicate=users.some(u=>(u.username||'').toLowerCase()===username); if(duplicate) throw new Error('Username already exists.');
      const cred=await createUserWithEmailAndPassword(secondaryAuth,authEmail(username),form.password);
-     await setDoc(doc(db,'users',cred.user.uid),{uid:cred.user.uid,name:form.name,username,role:form.role,employeeId:form.employeeId,department:form.department,position:form.position,groupId:form.groupId||'',groupName:form.groupName||'',status:form.status,mustChangePassword:true,createdAt:serverTimestamp()});
+     await setDoc(doc(db,'users',cred.user.uid),{uid:cred.user.uid,name:form.name,username,role:form.role,employeeId:form.employeeId,department:form.department,position:form.position,groupId:form.groupId||'',groupName:form.groupName||'',status:form.status,createdAt:serverTimestamp()});
      await audit({action:'CREATE_USER',targetUserId:cred.user.uid,details:`Created ${form.role} ${username}`});await signOut(secondaryAuth)
    }
    cancelEdit();await load()
  }catch(err){setError(err.message)}};
  const toggle=async u=>{const status=u.status==='inactive'?'active':'inactive';await updateDoc(doc(db,'users',u.id),{status});await audit({action:status==='active'?'ACTIVATE_USER':'DEACTIVATE_USER',targetUserId:u.id,details:`${u.username||u.email} -> ${status}`});load()};
- const resetPassword=async u=>{
-   if(u.role==='super_admin') return;
-   const temp=window.prompt(`Enter a temporary password for ${u.username}. Minimum 6 characters:`,'');
-   if(!temp) return;
-   if(temp.length<6){setError('Temporary password must be at least 6 characters.');return}
-   const confirmTemp=window.prompt('Confirm the temporary password:','');
-   if(temp!==confirmTemp){setError('Temporary passwords do not match.');return}
-   try{
-     setError('');
-     await httpsCallable(getFunctions(),'resetUserPassword')({uid:u.id,temporaryPassword:temp});
-     await audit({action:'RESET_USER_PASSWORD',targetUserId:u.id,details:`Reset password for ${u.username}; forced one-time change.`});
-     alert('Temporary password set. The user must change it on their next login.');
-     await load();
-   }catch(err){setError(err.message||'Unable to reset password.')}
- };
  const remove=async u=>{if(!confirm(`Delete Firestore profile for ${u.username||u.email}? Their Firebase Auth account must be deleted separately.`))return;await deleteDoc(doc(db,'users',u.id));await audit({action:'DELETE_USER',targetUserId:u.id,details:`Deleted profile ${u.username||u.email}`});load()};
  const filtered=users.filter(u=>`${u.name||''} ${u.username||''} ${u.employeeId||''}`.toLowerCase().includes(search.toLowerCase()));
  const isSuperAdmin=profile.role==='super_admin', showCreate=isSuperAdmin, editingTarget=users.find(u=>u.id===editing);
@@ -48,6 +33,6 @@ export default function Users(){
    <div className="page-title-row"><div><p className="eyebrow">ADMINISTRATION</p><h1>User Management</h1></div>{showCreate&&<button className="amber-btn" onClick={()=>{cancelEdit();setForm(blank)}}>+ Add User</button>}</div>
    <div className="toolbar-row"><div className="search-wrap"><span>⌕</span><input placeholder="Search by name, username, or employee ID..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} / {users.length} users</span></div>
    {(showCreate||(isSuperAdmin&&editing))&&<div className="content-card form-panel"><div className="panel-heading"><div><p className="eyebrow">USER FORM</p><h2>{editing?'Edit User':'Create User'}</h2></div>{editing&&<button className="ghost-btn" type="button" onClick={cancelEdit}>Cancel</button>}</div>{isSuperAdmin&&editing&&<p className="subtext">Super Admin can assign this account as <b>Admin</b> or <b>Employee</b>.</p>}<form className="user-form" onSubmit={submit}><input placeholder="Full name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/><input placeholder="Username" value={form.username} disabled={!!editing} onChange={e=>setForm({...form,username:e.target.value})} required/>{!editing&&<input placeholder="Temporary password" type="password" minLength="6" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required/>}<input placeholder="Employee ID" value={form.employeeId} onChange={e=>setForm({...form,employeeId:e.target.value})}/><input placeholder="Department" value={form.department} onChange={e=>setForm({...form,department:e.target.value})}/><select value={form.position} onChange={e=>setForm({...form,position:e.target.value})} required><option value="">Select Position</option><option value="IT Staff">IT Staff</option><option value="Team Leader">Team Leader</option></select><select value={form.groupId} onChange={e=>{const g=groups.find(x=>x.id===e.target.value);setForm({...form,groupId:g?.id||'',groupName:g?.name||''})}} required><option value="">Select Group</option>{groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select><select value={form.role} disabled={isSuperAdmin&&editingTarget?.role==='super_admin'} onChange={e=>setForm({...form,role:e.target.value})}><option value="employee">Employee</option><option value="admin">Admin</option>{!isSuperAdmin&&<option value="super_admin">Super Admin</option>}</select><select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option value="active">Active</option><option value="inactive">Inactive</option></select><button className="amber-btn">{editing?'Save Changes':'Create User'}</button></form>{error&&<p className="error">{error}</p>}</div>}
-   <div className="content-card table-wrap"><table><thead><tr><th>NAME</th><th>USERNAME</th><th>ROLE</th><th>STATUS</th><th>DEPARTMENT</th><th>ACTIONS</th></tr></thead><tbody>{filtered.map(u=><tr key={u.id}><td><div className="name-cell"><span className="table-avatar">{(u.name||'U')[0].toUpperCase()}</span><div><b>{u.name||'—'}</b><small>{u.employeeId||'No employee ID'}</small></div></div></td><td>{u.username||'—'}</td><td><span className={`role-tag ${u.role}`}>{u.role.replace('_',' ')}</span></td><td><span className={`status-dot ${u.status==='inactive'?'off':'on'}`}>{u.status||'active'}</span></td><td>{u.department||'—'}</td><td><div className="actions"><button className="link-btn" onClick={()=>startEdit(u)}>Edit</button><button className="link-btn" onClick={()=>toggle(u)}>{u.status==='inactive'?'Activate':'Deactivate'}</button>{isSuperAdmin&&u.role!=='super_admin'&&<button className="link-btn" onClick={()=>resetPassword(u)}>Reset Password</button>}{isSuperAdmin&&<button className="link-btn danger-link" onClick={()=>remove(u)}>Delete</button>}</div></td></tr>)}</tbody></table>{!loading&&!filtered.length&&<div className="empty-state">No users found.</div>}{loading&&<div className="empty-state">Loading users...</div>}</div>
+   <div className="content-card table-wrap"><table><thead><tr><th>NAME</th><th>USERNAME</th><th>ROLE</th><th>STATUS</th><th>DEPARTMENT</th><th>ACTIONS</th></tr></thead><tbody>{pageItems.map(u=><tr key={u.id}><td><div className="name-cell"><span className="table-avatar">{(u.name||'U')[0].toUpperCase()}</span><div><b>{u.name||'—'}</b><small>{u.employeeId||'No employee ID'}</small></div></div></td><td>{u.username||'—'}</td><td><span className={`role-tag ${u.role}`}>{u.role.replace('_',' ')}</span></td><td><span className={`status-dot ${u.status==='inactive'?'off':'on'}`}>{u.status||'active'}</span></td><td>{u.department||'—'}</td><td><div className="actions"><button className="link-btn" onClick={()=>startEdit(u)}>Edit</button><button className="link-btn" onClick={()=>toggle(u)}>{u.status==='inactive'?'Activate':'Deactivate'}</button>{isSuperAdmin&&<button className="link-btn danger-link" onClick={()=>remove(u)}>Delete</button>}</div></td></tr>)}</tbody></table>{!loading&&!filtered.length&&<div className="empty-state">No users found.</div>}{loading&&<div className="empty-state">Loading users...</div>}{!loading&&filtered.length>0&&<TablePagination {...pagination} totalItems={filtered.length}/>} </div>
  </section>
 }

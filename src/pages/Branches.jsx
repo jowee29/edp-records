@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, writeBatch, where } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 import { db } from '../firebase';
+import { usePagination, TablePagination } from '../components/TablePagination';
 import { audit, useAuth } from '../auth';
 
 const blank = {
@@ -55,6 +56,7 @@ export default function Branches(){
   const [importFile,setImportFile]=useState(null);
   const [importing,setImporting]=useState(false);
   const [importError,setImportError]=useState('');
+  const importPagination=usePagination(importRows,8); const {pageItems:importPageItems}=importPagination;
 
   const load=async()=>{
     setLoading(true); setError('');
@@ -95,6 +97,7 @@ export default function Branches(){
       return (!q||hay.includes(q)) && (typeFilter==='ALL'||String(b.branchType||'').toUpperCase()===typeFilter) && (companyFilter==='ALL'||String(b.company||'')===companyFilter) && (connFilter==='ALL'||String(b.connType||'').toLowerCase()===connFilter.toLowerCase());
     });
   },[branches,search,typeFilter,companyFilter,connFilter]);
+  const pagination=usePagination(filtered,10); const {pageItems}=pagination;
 
   const change=(key,value)=>setForm(f=>({...f,[key]:value}));
   const reset=()=>{setForm({...blank});setEditing(null);setEditingBranch(null);setError('')};
@@ -209,13 +212,14 @@ export default function Branches(){
     <div className="branch-list-head"><div><strong>Branch Records</strong><span>{filtered.length} shown of {branches.length}</span></div><span className="branch-list-note">Use View for complete connectivity details.</span></div>
     <div className="content-card table-wrap branch-table">
       <table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NUMBER</th><th>ACTIONS</th></tr></thead>
-        <tbody>{filtered.map(b=><tr key={b.id}>
+        <tbody>{pageItems.map(b=><tr key={b.id}>
           <td><div className="branch-name-cell"><b>{b.branchName||'—'}</b></div></td>
           <td><span className={`branch-type-badge ${String(b.branchType||'').toLowerCase().replace(/\s+/g,'-')}`}>{b.branchType||'—'}</span></td>
           <td>{b.company||'—'}</td><td>{b.accountNo||'—'}</td>
           <td><div className="actions"><button className="link-btn view-link" type="button" onClick={()=>setViewing(b)}>View</button><button className="link-btn" type="button" onClick={()=>openEdit(b)}>Edit</button><button className="link-btn danger-link" type="button" onClick={()=>remove(b)}>Delete</button></div></td>
         </tr>)}</tbody>
       </table>
+      {!loading&&filtered.length>0&&<TablePagination {...pagination} totalItems={filtered.length}/>} 
       {!loading&&!filtered.length&&<div className="branch-empty"><div className="branch-empty-icon">⌕</div><strong>{branches.length?'No matching branches':'No branch records yet'}</strong><p>{branches.length?'Try changing your search or filters.':'Add your first branch or import records from Excel/CSV.'}</p>{activeFilters?<button className="ghost-btn" type="button" onClick={clearFilters}>Clear Filters</button>:<button className="amber-btn" type="button" onClick={openAdd}>+ Add Branch</button>}</div>}
       {loading&&<div className="branch-empty"><strong>Loading branches...</strong><p>Please wait while records are loaded from Firebase.</p></div>}
     </div>
@@ -249,7 +253,7 @@ export default function Branches(){
           <div className="import-help"><div className="import-help-title">Import requirements</div><p><b>Required:</b> BRANCH NAME and BRANCH TYPE. BRANCH TYPE must be <b>FULL</b> or <b>SALES OFFICE</b>.</p><div className="import-column-list">BRANCH NAME · BRANCH TYPE · COMPANY · ACCOUNT NO. · TEL. NO. · CONTACT PERSON · CONTACT NO. · ADDRESS · OIC · CONTACT NO._1 · ISP · CONN_TYPE · PLAN · MONTHLY PAYMENT · IP ADDRESS · SUBNET MASK · DEFAULT GATEWAY · DNS1 · DNS2 · NO. OF COMP. · 2175/2175II · LX-310II · COLORED</div></div>
           <label className="file-picker"><span>{importFile?importFile.name:'Choose Excel or CSV file'}</span><input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={handleImportFile}/></label>
           {importError&&<p className="error modal-error">{importError}</p>}
-          {importRows.length>0&&<><div className="import-summary"><div><b>{importRows.length}</b> records ready</div><small>Previewing up to 8 rows</small></div><div className="content-card table-wrap import-preview"><table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NO.</th><th>ISP</th><th>PLAN</th></tr></thead><tbody>{importRows.slice(0,8).map((r,i)=><tr key={i}><td>{r.branchName}</td><td>{r.branchType}</td><td>{r.company||'—'}</td><td>{r.accountNo||'—'}</td><td>{r.isp||'—'}</td><td>{r.plan||'—'}</td></tr>)}</tbody></table></div></>}
+          {importRows.length>0&&<><div className="import-summary"><div><b>{importRows.length}</b> records ready</div><small>Previewing up to 8 rows</small></div><div className="content-card table-wrap import-preview"><table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NO.</th><th>ISP</th><th>PLAN</th></tr></thead><tbody>{importPageItems.map((r,i)=><tr key={i}><td>{r.branchName}</td><td>{r.branchType}</td><td>{r.company||'—'}</td><td>{r.accountNo||'—'}</td><td>{r.isp||'—'}</td><td>{r.plan||'—'}</td></tr>)}</tbody></table><TablePagination {...importPagination} totalItems={importRows.length} pageSize={8}/></div></>}
           <div className="branch-form-actions"><button className="ghost-btn" type="button" onClick={()=>setShowImport(false)}>Cancel</button><button className="amber-btn" type="button" disabled={!importRows.length||importing} onClick={importBranches}>{importing?'Importing...':`Import ${importRows.length||''} Branches`}</button></div>
         </div>
       </div>

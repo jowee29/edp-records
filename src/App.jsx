@@ -1,8 +1,7 @@
 import edpLogo from './assets/edp-logo.png';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import { useAuth, audit } from './auth';
-import { Login, ForgotPassword, ChangePassword } from './pages/Auth';
+import { Login, ForgotPassword } from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
@@ -18,7 +17,6 @@ function Protected({children,roles}){
   if(!user)return <Navigate to="/login" replace/>;
   if(!profile)return <div className="screen-message"><div className="dark-card"><h2>Account profile missing</h2><p>Please contact an administrator.</p></div></div>;
   if(profile.status==='inactive')return <div className="screen-message"><div className="dark-card"><h2>Account inactive</h2><p>Please contact an administrator.</p></div></div>;
-  if(profile.mustChangePassword && profile.role !== 'super_admin' && window.location.pathname !== '/change-password') return <Navigate to="/change-password" replace/>;
   if(roles&&!roles.includes(profile.role))return <Navigate to="/dashboard" replace/>;
   return children;
 }
@@ -42,7 +40,6 @@ function Layout({children}){
   const {profile,logout}=useAuth();
   const navigate=useNavigate();
   const nav=async()=>{await audit({action:'LOGOUT',details:'User logged out'});await logout();navigate('/login')};
-  const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
   const role=profile?.role||'employee';
   const roleLabel=role.replace('_',' ').toUpperCase();
   const navItems=[
@@ -58,8 +55,7 @@ function Layout({children}){
       {to:'/audit-logs',label:'Audit Logs',icon:'audit'}
     ] : [])
   ];
-  const closeMobileMenu=()=>setMobileMenuOpen(false);
-  return <div className={`app-shell ${mobileMenuOpen?'mobile-menu-open':''}`}>
+  return <div className="app-shell">
     <aside className="sidebar">
       <div className="sidebar-brand">
         <img src={edpLogo} alt="EDP"/>
@@ -85,27 +81,9 @@ function Layout({children}){
     </aside>
     <div className="main-shell">
       <header className="mobile-topbar">
-        <button className="mobile-menu-btn" aria-label="Open menu" aria-expanded={mobileMenuOpen} onClick={()=>setMobileMenuOpen(v=>!v)}>
-          <span></span><span></span><span></span>
-        </button>
         <div className="sidebar-brand"><img src={edpLogo} alt="EDP"/><div><strong>EDP Records</strong><span>MANAGEMENT SYSTEM</span></div></div>
-        <NavLink to="/profile" onClick={closeMobileMenu} className="mobile-avatar">{(profile?.name||'U').slice(0,1).toUpperCase()}</NavLink>
+        <NavLink to="/profile" className="mobile-avatar">{(profile?.name||'U').slice(0,1).toUpperCase()}</NavLink>
       </header>
-      <div className={`mobile-menu-backdrop ${mobileMenuOpen?'show':''}`} onClick={closeMobileMenu}></div>
-      <aside className={`mobile-drawer ${mobileMenuOpen?'open':''}`}>
-        <div className="mobile-drawer-head">
-          <div className="sidebar-brand"><img src={edpLogo} alt="EDP"/><div><strong>EDP Records</strong><span>{roleLabel}</span></div></div>
-          <button className="mobile-close-btn" onClick={closeMobileMenu} aria-label="Close menu">×</button>
-        </div>
-        <span className="sidebar-label">MAIN MENU</span>
-        <nav className="side-nav">
-          {navItems.map(item=><NavLink key={item.to} to={item.to} onClick={closeMobileMenu} className={({isActive})=>`side-link ${isActive?'active':''}`}><Icon name={item.icon}/><span>{item.label}</span></NavLink>)}
-        </nav>
-        <div className="mobile-drawer-bottom">
-          <NavLink to="/profile" onClick={closeMobileMenu} className="side-link"><Icon name="profile"/><span>My Profile</span></NavLink>
-          <button className="logout-link" onClick={nav}><Icon name="logout"/><span>Log Out</span></button>
-        </div>
-      </aside>
       <main className="page-container">{children}</main>
     </div>
   </div>
@@ -117,7 +95,6 @@ export default function App(){
     <Route path="/login" element={user?<Navigate to="/dashboard" replace/>:<Login/>}/>
 
     <Route path="/forgot-password" element={user?<Navigate to="/dashboard" replace/>:<ForgotPassword/>}/>
-    <Route path="/change-password" element={<Protected><ChangePassword/></Protected>}/>
     <Route path="/dashboard" element={<Protected><Layout><Dashboard/></Layout></Protected>}/>
     <Route path="/users" element={<Protected roles={['super_admin']}><Layout><Users/></Layout></Protected>}/>
     <Route path="/branches" element={<Protected roles={['admin','employee','super_admin']}><Layout><Branches/></Layout></Protected>}/>
