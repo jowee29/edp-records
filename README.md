@@ -3,7 +3,7 @@
 React + Firebase role-based admin system.
 
 ## Features
-- Login / Signup / Logout
+- Username Login / Logout
 - Forgot password
 - Super Admin / Admin / Employee RBAC
 - Responsive sidebar
@@ -26,7 +26,7 @@ Copy `.env.example` to `.env` and add your Firebase Web App configuration.
 Enable Authentication > Email/Password and Firestore.
 Deploy `firestore.rules` using Firebase CLI or paste the rules in Firestore Rules.
 
-For the first Super Admin, create a normal account through Signup then change its `users/{uid}.role` to `super_admin` once in Firestore.
+For the first Super Admin, create the initial Firebase Authentication account manually, create its `users/{uid}` profile, and set `role` to `super_admin`. New accounts can then be created only by the Super Admin using a username.
 
 ### Important
 Client-side Firebase SDK cannot securely delete another user's Firebase Authentication account. The Delete action in this starter removes the Firestore profile only. For complete Auth deletion, use a trusted backend/Cloud Function with Firebase Admin SDK.

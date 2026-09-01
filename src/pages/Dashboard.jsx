@@ -36,7 +36,7 @@ export default function Dashboard(){
    return()=>{alive=false};
  },[role]);
 
- const name=profile?.name||profile?.email?.split('@')[0]||'User';
+ const name=profile?.name||profile?.username||'User';
  const initials=name.split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
  const formattedRecent=useMemo(()=>recent.map(r=>({...r,time:r.createdAt? r.createdAt.toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'Recent'})),[recent]);
 

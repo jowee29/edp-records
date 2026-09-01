@@ -20,7 +20,7 @@ export default function Profile(){
  };
  return <section><div className="page-title-row"><div><p className="eyebrow">ACCOUNT</p><h1>My Profile</h1></div><span className="role-chip">{(profile?.role||'employee').replace('_',' ').toUpperCase()}</span></div><div className="content-card profile-card"><form onSubmit={save}>
  <label>Name<input value={form.name||''} onChange={e=>setForm({...form,name:e.target.value})} required/></label>
- <label>Email<input value={form.email||''} disabled/></label>
+ <label>Username<input value={form.username||''} disabled/></label>
  <label>Employee ID<input value={form.employeeId||''} onChange={e=>setForm({...form,employeeId:e.target.value})}/></label>
  <label>Department<input value={form.department||''} onChange={e=>setForm({...form,department:e.target.value})}/></label>
  <label>Position<select value={form.position||''} onChange={e=>setForm({...form,position:e.target.value})} required><option value="">Select Position</option><option value="Team Leader">Team Leader</option><option value="IT Staff">IT Staff</option></select></label>

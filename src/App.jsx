@@ -73,7 +73,7 @@ function Layout({children}){
         <span className="sidebar-label">ACCOUNT</span>
         <NavLink to="/profile" className={({isActive})=>`side-link ${isActive?'active':''}`}><Icon name="profile"/><span>My Profile</span></NavLink>
         <div className="sidebar-user">
-          <div className="avatar">{(profile?.name||profile?.email||'U').slice(0,1).toUpperCase()}</div>
+          <div className="avatar">{(profile?.name||profile?.username||'U').slice(0,1).toUpperCase()}</div>
           <div className="user-copy"><strong>{profile?.name||'User'}</strong><span>{roleLabel}</span></div>
         </div>
         <button className="logout-link" onClick={nav}><Icon name="logout"/><span>Log Out</span></button>

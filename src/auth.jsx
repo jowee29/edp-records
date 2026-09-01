@@ -15,5 +15,5 @@ export const useAuth = () => useContext(AuthContext);
 export const audit = async ({action, details='', targetUserId=''}) => {
   const u=auth.currentUser; if(!u) return;
   const p=(await getDoc(doc(db,'users',u.uid))).data();
-  await setDoc(doc(db,'auditLogs',`${Date.now()}_${u.uid}`), {userId:u.uid,userName:p?.name||u.email,action,details,targetUserId,createdAt:serverTimestamp()});
+  await setDoc(doc(db,'auditLogs',`${Date.now()}_${u.uid}`), {userId:u.uid,userName:p?.name||p?.username||u.email,action,details,targetUserId,createdAt:serverTimestamp()});
 };

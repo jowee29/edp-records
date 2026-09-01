@@ -8,7 +8,7 @@ service cloud.firestore {
     function isStaff() { return signedIn() && myUser().role in ['admin','employee','super_admin']; }
 
     match /users/{uid} {
-      allow create: if isSuperAdmin() && request.resource.data.role in ['admin','employee'] || (signedIn() && request.auth.uid == uid && request.resource.data.role == 'employee');
+      allow create: if isSuperAdmin() && request.resource.data.role in ['admin','employee'];
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || resource.data.position == 'Team Leader');
       allow update: if signedIn() && (
         (request.auth.uid == uid && request.resource.data.role == resource.data.role) ||
