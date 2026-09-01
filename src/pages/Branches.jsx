@@ -181,7 +181,7 @@ export default function Branches(){
     return <input type={type==='number'?'number':'text'} min={type==='number'?'0':undefined} step={key==='monthlyPayment'?'0.01':undefined} value={form[key]} onChange={e=>change(key,e.target.value)} required={required} />;
   };
 
-  return <section className="branch-management-page">
+  return <section>
     <div className="page-title-row branch-page-heading">
       <div><p className="eyebrow">SUPER ADMINISTRATION</p><h1>Branch Management</h1><p className="subtext">Centralized branch, contact, connectivity, and equipment records.</p></div>
       <div className="page-actions"><button className="ghost-btn" type="button" onClick={()=>{setImportRows([]);setImportFile(null);setImportError('');setShowImport(true)}}>⇧ Import Branches</button><button className="amber-btn" type="button" onClick={openAdd}>+ Add Branch</button></div>
@@ -208,11 +208,11 @@ export default function Branches(){
 
     <div className="branch-list-head"><div><strong>Branch Records</strong><span>{filtered.length} shown of {branches.length}</span></div><span className="branch-list-note">Use View for complete connectivity details.</span></div>
     <div className="content-card table-wrap branch-table">
-      <table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NUMBER</th><th>CONTACT PERSON</th><th>ACTIONS</th></tr></thead>
+      <table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NUMBER</th><th>ACTIONS</th></tr></thead>
         <tbody>{filtered.map(b=><tr key={b.id}>
           <td><div className="branch-name-cell"><b>{b.branchName||'—'}</b></div></td>
           <td><span className={`branch-type-badge ${String(b.branchType||'').toLowerCase().replace(/\s+/g,'-')}`}>{b.branchType||'—'}</span></td>
-          <td>{b.company||'—'}</td><td>{b.accountNo||'—'}</td><td>{b.contactPerson||'—'}</td>
+          <td>{b.company||'—'}</td><td>{b.accountNo||'—'}</td>
           <td><div className="actions"><button className="link-btn view-link" type="button" onClick={()=>setViewing(b)}>View</button><button className="link-btn" type="button" onClick={()=>openEdit(b)}>Edit</button><button className="link-btn danger-link" type="button" onClick={()=>remove(b)}>Delete</button></div></td>
         </tr>)}</tbody>
       </table>

@@ -1,5 +1,5 @@
 import edpLogo from './assets/edp-logo.png';
-import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 import { useAuth, audit } from './auth';
 import { Login, Signup, ForgotPassword } from './pages/Auth';
 import Dashboard from './pages/Dashboard';
@@ -21,44 +21,71 @@ function Protected({children,roles}){
   return children;
 }
 
+const Icon=({name})=>{
+  const paths={
+    grid:<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
+    users:<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+    branch:<><path d="M3 21h18"/><path d="M6 21V5l6-3 6 3v16"/><path d="M9 8h2M13 8h2M9 12h2M13 12h2M9 16h2M13 16h2"/></>,
+    form:<><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></>,
+    history:<><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></>,
+    groups:<><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="3"/><path d="M2 20a7 7 0 0 1 14 0M14 20a6 6 0 0 1 8 0"/></>,
+    audit:<><path d="M12 3l8 4v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V7l8-4Z"/><path d="M9 12l2 2 4-4"/></>,
+    profile:<><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
+    logout:<><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/></>
+  };
+  return <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>
+};
+
 function Layout({children}){
   const {profile,logout}=useAuth();
   const navigate=useNavigate();
-  const location=useLocation();
   const nav=async()=>{await audit({action:'LOGOUT',details:'User logged out'});await logout();navigate('/login')};
+  const role=profile?.role||'employee';
+  const roleLabel=role.replace('_',' ').toUpperCase();
   const navItems=[
-    {to:'/dashboard',label:'Dashboard'},
-    ...(profile?.role==='super_admin' ? [{to:'/users',label:'Users'}] : []),
-    ...(profile?.role==='admin'||profile?.role==='employee'||profile?.role==='super_admin' ? [{to:'/branches',label:'Branches'},{to:'/accomplishment',label:'Add Accomplishment'},{to:'/accomplishment-history',label:'Accomplishment History'}] : []),
-    ...(profile?.role==='super_admin' ? [{to:'/groups',label:'Groups'},{to:'/audit-logs',label:'Audit Logs'}] : []),
-    {to:'/profile',label:'My Profile'}
+    {to:'/dashboard',label:'Dashboard',icon:'grid'},
+    ...(role==='super_admin' ? [{to:'/users',label:'User Management',icon:'users'}] : []),
+    ...(role==='admin'||role==='employee'||role==='super_admin' ? [
+      {to:'/branches',label:'Branches',icon:'branch'},
+      {to:'/accomplishment',label:'Add Accomplishment',icon:'form'},
+      {to:'/accomplishment-history',label:'Accomplishment History',icon:'history'}
+    ] : []),
+    ...(role==='super_admin' ? [
+      {to:'/groups',label:'Groups',icon:'groups'},
+      {to:'/audit-logs',label:'Audit Logs',icon:'audit'}
+    ] : [])
   ];
-  const roleLabel=(profile?.role||'employee').replace('_',' ').toUpperCase();
-  return <div className="site-shell">
-    <header className="topbar">
-      <div className="topbar-inner">
-        <NavLink to="/dashboard" className="brand-lockup">
-          <img className="brand-logo-img" src={edpLogo} alt="EDP logo" />
-          <span><strong>EDP Records</strong><small>STOCK LEDGER &amp; TRACKING</small></span>
-        </NavLink>
-        <div className="top-actions">
-          <button className="icon-btn" aria-label="Notifications">●</button>
-          <span className="role-chip">{roleLabel}</span>
-          <span className="account-email">{profile?.email}</span>
-          <NavLink className="outline-btn" to="/profile">My Profile</NavLink>
-          <button className="outline-btn" onClick={nav}>Log Out</button>
-        </div>
+  return <div className="app-shell">
+    <aside className="sidebar">
+      <div className="sidebar-brand">
+        <img src={edpLogo} alt="EDP"/>
+        <div><strong>EDP Records</strong><span>MANAGEMENT SYSTEM</span></div>
       </div>
-      <div className="nav-wrap">
-        <nav className="main-nav">
-          {navItems.map(item=><NavLink key={item.to} to={item.to} className={({isActive})=>`nav-tab ${isActive?'active':''}`}>{item.label}</NavLink>)}
+      <div className="sidebar-section">
+        <span className="sidebar-label">MAIN MENU</span>
+        <nav className="side-nav">
+          {navItems.map(item=><NavLink key={item.to} to={item.to} className={({isActive})=>`side-link ${isActive?'active':''}`}>
+            <Icon name={item.icon}/><span>{item.label}</span>
+          </NavLink>)}
         </nav>
       </div>
-    </header>
-    <main className="page-container">
-      <div className="route-label">{location.pathname==='/dashboard'?'OVERVIEW':location.pathname.replace('/','').replaceAll('-',' ').toUpperCase()}</div>
-      {children}
-    </main>
+      <div className="sidebar-bottom">
+        <span className="sidebar-label">ACCOUNT</span>
+        <NavLink to="/profile" className={({isActive})=>`side-link ${isActive?'active':''}`}><Icon name="profile"/><span>My Profile</span></NavLink>
+        <div className="sidebar-user">
+          <div className="avatar">{(profile?.name||profile?.email||'U').slice(0,1).toUpperCase()}</div>
+          <div className="user-copy"><strong>{profile?.name||'User'}</strong><span>{roleLabel}</span></div>
+        </div>
+        <button className="logout-link" onClick={nav}><Icon name="logout"/><span>Log Out</span></button>
+      </div>
+    </aside>
+    <div className="main-shell">
+      <header className="mobile-topbar">
+        <div className="sidebar-brand"><img src={edpLogo} alt="EDP"/><div><strong>EDP Records</strong><span>MANAGEMENT SYSTEM</span></div></div>
+        <NavLink to="/profile" className="mobile-avatar">{(profile?.name||'U').slice(0,1).toUpperCase()}</NavLink>
+      </header>
+      <main className="page-container">{children}</main>
+    </div>
   </div>
 }
 
