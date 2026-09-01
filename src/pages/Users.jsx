@@ -15,7 +15,7 @@ export default function Users(){
  const toggle=async u=>{const status=u.status==='inactive'?'active':'inactive';await updateDoc(doc(db,'users',u.id),{status});await audit({action:status==='active'?'ACTIVATE_USER':'DEACTIVATE_USER',targetUserId:u.id,details:`${u.email} -> ${status}`});load()};
  const remove=async u=>{if(!confirm(`Delete Firestore profile for ${u.email}? Their Firebase Auth account must be deleted separately.`))return;await deleteDoc(doc(db,'users',u.id));await audit({action:'DELETE_USER',targetUserId:u.id,details:`Deleted profile ${u.email}`});load()};
  const filtered=users.filter(u=>`${u.name||''} ${u.email||''} ${u.employeeId||''}`.toLowerCase().includes(search.toLowerCase()));
- const isSuperAdmin=profile.role==='super_admin', showCreate=profile.role!=='super_admin', editingTarget=users.find(u=>u.id===editing);
+ const isSuperAdmin=profile.role==='super_admin', showCreate=isSuperAdmin, editingTarget=users.find(u=>u.id===editing);
  return <section>
    <div className="page-title-row"><div><p className="eyebrow">ADMINISTRATION</p><h1>User Management</h1></div>{showCreate&&<button className="amber-btn" onClick={()=>{cancelEdit();setForm(blank)}}>+ Add User</button>}</div>
    <div className="toolbar-row"><div className="search-wrap"><span>⌕</span><input placeholder="Search by name, email, or employee ID..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} / {users.length} users</span></div>
