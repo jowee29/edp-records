@@ -5,10 +5,11 @@ service cloud.firestore {
     function myUser() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
     function isSuperAdmin() { return signedIn() && myUser().role == 'super_admin'; }
     function isAdmin() { return signedIn() && myUser().role in ['admin','super_admin']; }
+    function isStaff() { return signedIn() && myUser().role in ['admin','employee','super_admin']; }
 
     match /users/{uid} {
       allow create: if signedIn() && request.auth.uid == uid && request.resource.data.role == 'employee';
-      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || resource.data.position == 'Team Leader');
       allow update: if signedIn() && (
         (request.auth.uid == uid && request.resource.data.role == resource.data.role) ||
         (isSuperAdmin() && (
@@ -20,14 +21,21 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    match /groups/{groupId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
     match /branches/{branchId} {
-      allow read, create, update, delete: if isSuperAdmin();
+      allow read: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
+      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
     }
 
     match /accomplishments/{accomplishmentId} {
-      allow create: if isSuperAdmin();
-      allow read: if isSuperAdmin();
-      allow update, delete: if isSuperAdmin();
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
+      allow read: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
+      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
     }
 
     match /auditLogs/{logId} {

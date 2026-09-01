@@ -1,0 +1,13 @@
+import { useEffect, useState } from 'react';
+import { collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth, audit } from '../auth';
+
+export default function Groups(){
+ const {profile}=useAuth(); const [groups,setGroups]=useState([]); const [name,setName]=useState(''); const [editing,setEditing]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
+ const load=async()=>{setLoading(true);try{const s=await getDocs(query(collection(db,'groups'),orderBy('name','asc')));setGroups(s.docs.map(d=>({id:d.id,...d.data()})))}catch(e){setError(e.message)}finally{setLoading(false)}};
+ useEffect(()=>{load()},[]);
+ const save=async e=>{e.preventDefault();setError('');const clean=name.trim();if(!clean)return;if(editing){await updateDoc(doc(db,'groups',editing),{name:clean,updatedAt:serverTimestamp()});await audit({action:'UPDATE_GROUP',targetUserId:null,details:`Updated group ${clean}`})}else{const ref=doc(collection(db,'groups'));await setDoc(ref,{name:clean,createdAt:serverTimestamp(),createdBy:profile.uid});await audit({action:'CREATE_GROUP',details:`Created group ${clean}`})}setName('');setEditing(null);load()};
+ const remove=async g=>{if(!confirm(`Delete group ${g.name}?`))return;await deleteDoc(doc(db,'groups',g.id));await audit({action:'DELETE_GROUP',details:`Deleted group ${g.name}`});load()};
+ return <section><div className="page-title-row"><div><p className="eyebrow">ADMINISTRATION</p><h1>Group Management</h1></div></div><div className="content-card form-panel"><div className="panel-heading"><div><p className="eyebrow">GROUP</p><h2>{editing?'Edit Group':'Add Group'}</h2></div>{editing&&<button className="ghost-btn" type="button" onClick={()=>{setEditing(null);setName('')}}>Cancel</button>}</div><form className="user-form" onSubmit={save}><input placeholder="Group name" value={name} onChange={e=>setName(e.target.value)} required/><button className="amber-btn">{editing?'Save Changes':'Add Group'}</button></form>{error&&<p className="error">{error}</p>}</div><div className="content-card table-wrap"><table><thead><tr><th>GROUP NAME</th><th>ACTIONS</th></tr></thead><tbody>{groups.map(g=><tr key={g.id}><td><b>{g.name}</b></td><td><div className="actions"><button className="link-btn" onClick={()=>{setEditing(g.id);setName(g.name)}}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(g)}>Delete</button></div></td></tr>)}</tbody></table>{loading&&<div className="empty-state">Loading groups...</div>}{!loading&&!groups.length&&<div className="empty-state">No groups yet.</div>}</div></section>
+}

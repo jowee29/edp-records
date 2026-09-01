@@ -9,6 +9,7 @@ import AuditLogs from './pages/AuditLogs';
 import Branches from './pages/Branches';
 import Accomplishment from './pages/Accomplishment';
 import AccomplishmentHistory from './pages/AccomplishmentHistory';
+import Groups from './pages/Groups';
 
 function Protected({children,roles}){
   const {user,profile,loading}=useAuth();
@@ -27,8 +28,9 @@ function Layout({children}){
   const nav=async()=>{await audit({action:'LOGOUT',details:'User logged out'});await logout();navigate('/login')};
   const navItems=[
     {to:'/dashboard',label:'Dashboard'},
-    ...(profile?.role==='admin'||profile?.role==='super_admin' ? [{to:'/users',label:'Users'}] : []),
-    ...(profile?.role==='super_admin' ? [{to:'/branches',label:'Branches'},{to:'/accomplishment',label:'Add Accomplishment'},{to:'/accomplishment-history',label:'Accomplishment History'},{to:'/audit-logs',label:'Audit Logs'}] : []),
+    ...(profile?.role==='super_admin' ? [{to:'/users',label:'Users'}] : []),
+    ...(profile?.role==='admin'||profile?.role==='employee'||profile?.role==='super_admin' ? [{to:'/branches',label:'Branches'},{to:'/accomplishment',label:'Add Accomplishment'},{to:'/accomplishment-history',label:'Accomplishment History'}] : []),
+    ...(profile?.role==='super_admin' ? [{to:'/groups',label:'Groups'},{to:'/audit-logs',label:'Audit Logs'}] : []),
     {to:'/profile',label:'My Profile'}
   ];
   const roleLabel=(profile?.role||'employee').replace('_',' ').toUpperCase();
@@ -67,10 +69,11 @@ export default function App(){
     <Route path="/signup" element={user?<Navigate to="/dashboard" replace/>:<Signup/>}/>
     <Route path="/forgot-password" element={user?<Navigate to="/dashboard" replace/>:<ForgotPassword/>}/>
     <Route path="/dashboard" element={<Protected><Layout><Dashboard/></Layout></Protected>}/>
-    <Route path="/users" element={<Protected roles={['admin','super_admin']}><Layout><Users/></Layout></Protected>}/>
-    <Route path="/branches" element={<Protected roles={['super_admin']}><Layout><Branches/></Layout></Protected>}/>
-    <Route path="/accomplishment" element={<Protected roles={['super_admin']}><Layout><Accomplishment/></Layout></Protected>}/>
-    <Route path="/accomplishment-history" element={<Protected roles={['super_admin']}><Layout><AccomplishmentHistory/></Layout></Protected>}/>
+    <Route path="/users" element={<Protected roles={['super_admin']}><Layout><Users/></Layout></Protected>}/>
+    <Route path="/branches" element={<Protected roles={['admin','employee','super_admin']}><Layout><Branches/></Layout></Protected>}/>
+    <Route path="/groups" element={<Protected roles={['super_admin']}><Layout><Groups/></Layout></Protected>}/>
+    <Route path="/accomplishment" element={<Protected roles={['admin','employee','super_admin']}><Layout><Accomplishment/></Layout></Protected>}/>
+    <Route path="/accomplishment-history" element={<Protected roles={['admin','employee','super_admin']}><Layout><AccomplishmentHistory/></Layout></Protected>}/>
     <Route path="/audit-logs" element={<Protected roles={['super_admin']}><Layout><AuditLogs/></Layout></Protected>}/>
     <Route path="/profile" element={<Protected><Layout><Profile/></Layout></Protected>}/>
     <Route path="*" element={<Navigate to={user?'/dashboard':'/login'} replace/>}/>

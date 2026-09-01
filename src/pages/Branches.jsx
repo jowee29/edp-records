@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, writeBatch, where } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 import { db } from '../firebase';
-import { audit } from '../auth';
+import { audit, useAuth } from '../auth';
 
 const blank = {
   branchName:'', branchType:'', company:'', accountNo:'', telNo:'', contactPerson:'', contactNo:'', address:'',
@@ -37,6 +37,7 @@ const headerMap = {
 };
 
 export default function Branches(){
+  const {profile}=useAuth();
   const [branches,setBranches]=useState([]);
   const [form,setForm]=useState({...blank});
   const [editing,setEditing]=useState(null);
@@ -58,15 +59,24 @@ export default function Branches(){
   const load=async()=>{
     setLoading(true); setError('');
     try{
-      const snap=await getDocs(query(collection(db,'branches'),orderBy('createdAt','desc')));
-      setBranches(snap.docs.map(d=>({id:d.id,...d.data()})));
-    }catch(e){
-      // Older records may not have createdAt. Fall back to an unordered read.
+      const isSuper=profile?.role==='super_admin';
+      const base=collection(db,'branches');
+      const q=isSuper
+        ? query(base,orderBy('createdAt','desc'))
+        : profile?.groupId
+          ? query(base,where('groupId','==',profile.groupId),orderBy('createdAt','desc'))
+          : null;
+      if(!q){ setBranches([]); return; }
       try{
-        const snap=await getDocs(collection(db,'branches'));
+        const snap=await getDocs(q);
         setBranches(snap.docs.map(d=>({id:d.id,...d.data()})));
-      }catch(f){setError(f.message || e.message)}
-    }finally{setLoading(false)}
+      }catch(e){
+        // Fall back to a group-scoped unordered read if the composite index is not ready.
+        const fallback=isSuper ? base : query(base,where('groupId','==',profile.groupId));
+        const snap=await getDocs(fallback);
+        setBranches(snap.docs.map(d=>({id:d.id,...d.data()})));
+      }
+    }catch(e){setError(e.message)}finally{setLoading(false)}
   };
   useEffect(()=>{load()},[]);
 
@@ -87,9 +97,10 @@ export default function Branches(){
   },[branches,search,typeFilter,companyFilter,connFilter]);
 
   const change=(key,value)=>setForm(f=>({...f,[key]:value}));
-  const reset=()=>{setForm({...blank});setEditing(null);setError('')};
+  const reset=()=>{setForm({...blank});setEditing(null);setEditingBranch(null);setError('')};
   const openAdd=()=>{reset();setShowModal(true)};
-  const openEdit=b=>{setEditing(b.id);setForm({...blank,...b,monthlyPayment:b.monthlyPayment??'',noOfComp:b.noOfComp??'',branchType:b.branchType||'',connType:b.connType||'Static'});setError('');setShowModal(true)};
+  const [editingBranch,setEditingBranch]=useState(null);
+  const openEdit=b=>{setEditingBranch(b);setEditing(b.id);setForm({...blank,...b,monthlyPayment:b.monthlyPayment??'',noOfComp:b.noOfComp??'',branchType:b.branchType||'',connType:b.connType||'Static'});setError('');setShowModal(true)};
 
   const submit=async e=>{
     e.preventDefault(); setSaving(true); setError('');
@@ -97,7 +108,7 @@ export default function Branches(){
     const duplicate=branches.some(b=>b.id!==editing && String(b.branchName||'').trim().toLowerCase()===name.toLowerCase());
     if(duplicate){setError('May existing branch record na kapareho ng BRANCH NAME.');setSaving(false);return;}
     try{
-      const payload={...form,branchName:name,branchType:String(form.branchType).toUpperCase(),connType:form.connType||'Static',monthlyPayment:form.monthlyPayment?Number(form.monthlyPayment):0,noOfComp:form.noOfComp?Number(form.noOfComp):0,updatedAt:serverTimestamp()};
+      const payload={...form,branchName:name,branchType:String(form.branchType).toUpperCase(),connType:form.connType||'Static',monthlyPayment:form.monthlyPayment?Number(form.monthlyPayment):0,noOfComp:form.noOfComp?Number(form.noOfComp):0,groupId:editing ? (editingBranch?.groupId || profile?.groupId || '') : (profile?.groupId || ''),groupName:editing ? (editingBranch?.groupName || profile?.groupName || '') : (profile?.groupName || ''),updatedAt:serverTimestamp()};
       if(editing){
         await updateDoc(doc(db,'branches',editing),payload);
         await audit({action:'UPDATE_BRANCH',details:`Updated branch ${name}`,targetUserId:editing});
@@ -152,7 +163,7 @@ export default function Branches(){
       if(duplicates.length)throw new Error(`May duplicate BRANCH NAME sa import: ${duplicates.slice(0,5).map(r=>r.branchName).join(', ')}${duplicates.length>5?'...':''}`);
       for(let i=0;i<importRows.length;i+=450){
         const batch=writeBatch(db);
-        importRows.slice(i,i+450).forEach(row=>{const ref=doc(collection(db,'branches'));batch.set(ref,{...row,createdAt:serverTimestamp(),updatedAt:serverTimestamp()})});
+        importRows.slice(i,i+450).forEach(row=>{const ref=doc(collection(db,'branches'));batch.set(ref,{...row,groupId:profile?.groupId||'',groupName:profile?.groupName||'',createdAt:serverTimestamp(),updatedAt:serverTimestamp()})});
         await batch.commit();
       }
       await audit({action:'IMPORT_BRANCHES',details:`Imported ${importRows.length} branch records from ${importFile?.name||'Excel/CSV'}`});
@@ -197,15 +208,11 @@ export default function Branches(){
 
     <div className="branch-list-head"><div><strong>Branch Records</strong><span>{filtered.length} shown of {branches.length}</span></div><span className="branch-list-note">Use View for complete connectivity details.</span></div>
     <div className="content-card table-wrap branch-table">
-      <table><thead><tr><th>BRANCH</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NO.</th><th>CONTACT</th><th>ISP / PLAN</th><th>CONNECTION</th><th>IP ADDRESS</th><th>ACTIONS</th></tr></thead>
+      <table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NUMBER</th><th>ACTIONS</th></tr></thead>
         <tbody>{filtered.map(b=><tr key={b.id}>
-          <td><div className="branch-name-cell"><b>{b.branchName||'—'}</b><small>{b.address||'No address'}</small></div></td>
+          <td><div className="branch-name-cell"><b>{b.branchName||'—'}</b></div></td>
           <td><span className={`branch-type-badge ${String(b.branchType||'').toLowerCase().replace(/\s+/g,'-')}`}>{b.branchType||'—'}</span></td>
           <td>{b.company||'—'}</td><td>{b.accountNo||'—'}</td>
-          <td><b className="table-primary">{b.contactPerson||'—'}</b><small>{b.contactNo||b.telNo||''}</small></td>
-          <td><b className="table-primary">{b.isp||'—'}</b><small>{b.plan||''}</small></td>
-          <td><span className={`connection-badge ${String(b.connType||'').toLowerCase()}`}>{b.connType||'—'}</span></td>
-          <td className="mono-cell">{b.ipAddress||'—'}</td>
           <td><div className="actions"><button className="link-btn view-link" type="button" onClick={()=>setViewing(b)}>View</button><button className="link-btn" type="button" onClick={()=>openEdit(b)}>Edit</button><button className="link-btn danger-link" type="button" onClick={()=>remove(b)}>Delete</button></div></td>
         </tr>)}</tbody>
       </table>
