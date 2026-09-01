@@ -656,3 +656,235 @@ textarea[id="finding"] {
     overflow: hidden !important;
   }
 }
+
+
+/* Compact Accomplishment reference/confirmation sections */
+.branch-profile,
+.branch-profile-section,
+.connectivity,
+.connectivity-section,
+.fixed-assets,
+.fixed-assets-section,
+.confirmation,
+.confirmation-section,
+.confirmation-area {
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  gap: 3px !important;
+  line-height: 1.05 !important;
+}
+
+.branch-profile .field,
+.branch-profile-section .field,
+.connectivity .field,
+.connectivity-section .field,
+.fixed-assets .field,
+.fixed-assets-section .field,
+.confirmation .field,
+.confirmation-section .field {
+  margin: 1px 0 !important;
+  padding: 1px 3px !important;
+}
+
+.branch-profile label,
+.branch-profile-section label,
+.connectivity label,
+.connectivity-section label,
+.fixed-assets label,
+.fixed-assets-section label,
+.confirmation label,
+.confirmation-section label {
+  margin: 1px 0 !important;
+}
+
+@media print {
+  .branch-profile,
+  .branch-profile-section,
+  .connectivity,
+  .connectivity-section,
+  .fixed-assets,
+  .fixed-assets-section,
+  .confirmation,
+  .confirmation-section,
+  .confirmation-area {
+    margin-top: 1px !important;
+    margin-bottom: 1px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    gap: 2px !important;
+  }
+}
+
+/* Compact top date placement; hide legacy date-selection UI */
+.date-selection,
+.date-selector,
+.date-range-selector,
+.date-picker-selection,
+.dateSelection,
+.dateRange {
+  display: none !important;
+}
+.accomplishment-top-date {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin: 2px 0 5px !important;
+  padding: 2px 0 !important;
+}
+@media print {
+  .accomplishment-top-date {
+    display: flex !important;
+    margin: 1px 0 3px !important;
+  }
+}
+
+
+/* Accomplishment Form typography */
+.accomplishment-form,
+.accomplishment-form *,
+.accomplishment-print,
+.accomplishment-print *,
+.print-preview,
+.print-preview * {
+  font-family: Calibri, "Calibri Light", Arial, sans-serif !important;
+  font-size: 12pt !important;
+}
+
+/* Visiting Information: Date field removed */
+.visiting-information .visit-date,
+.visiting-information .date-field,
+.visiting-info .visit-date,
+.visiting-info .date-field {
+  display: none !important;
+}
+
+
+/* Accomplishment Form: border cleanup above FINDINGS / WORK DONE */
+.accomplishment-form .visiting-information,
+.accomplishment-form .visiting-info,
+.accomplishment-form .branch-profile,
+.accomplishment-form .branch-profile-section,
+.accomplishment-form .connectivity,
+.accomplishment-form .connectivity-section,
+.accomplishment-form .fixed-assets,
+.accomplishment-form .fixed-assets-section,
+.accomplishment-form .field {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Keep the Findings / Work Done section and everything below it bordered. */
+.accomplishment-form .report-area,
+.accomplishment-form .findings-section,
+.accomplishment-form .work-done-section,
+.accomplishment-form .consumable-section,
+.accomplishment-form .branch-reference,
+.accomplishment-form .branch-reference-section,
+.accomplishment-form .confirmation,
+.accomplishment-form .confirmation-section {
+  /* intentionally preserve existing borders */
+}
+
+/* Print/preview: same treatment */
+@media print {
+  .accomplishment-form .visiting-information,
+  .accomplishment-form .visiting-info,
+  .accomplishment-form .branch-profile,
+  .accomplishment-form .branch-profile-section,
+  .accomplishment-form .connectivity,
+  .accomplishment-form .connectivity-section,
+  .accomplishment-form .fixed-assets,
+  .accomplishment-form .fixed-assets-section,
+  .accomplishment-form .field {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Remove Branch label/value from Accomplishment header, preview and print */
+.accomplishment-header .branch,
+.accomplishment-header .branch-name,
+.accomplishment-header .header-branch,
+.print-header .branch,
+.print-header .branch-name,
+.preview-header .branch,
+.preview-header .branch-name {
+  display: none !important;
+}
+
+/* Print Preview / Actual Print: mirror the Add Accomplishment Form only */
+@media print {
+  .print-only-extra,
+  .preview-only-extra,
+  .print-header-extra,
+  .preview-header-extra,
+  .print-meta-extra,
+  .preview-meta-extra {
+    display:none !important;
+  }
+}
+.preview-only-extra,
+.print-only-extra {
+  display:none !important;
+}
+
+/* Print Preview removed from UI; actual print remains available */
+.print-preview,
+.print-preview-modal,
+.print-preview-overlay,
+.preview-print-modal,
+.preview-only {
+  display: none !important;
+}
+
+/* Actual Print button: direct browser print */
+@media screen {
+  .print-preview-overlay { display: none !important; }
+}
+@media print {
+  .print-preview-overlay { display: none !important; }
+}
+
+/* Accomplishment Form: borderless Visit Information inputs */
+.modern-accomplishment-paper .visit-section .field input,
+.modern-accomplishment-paper .visit-section .field select {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
+}
+.modern-accomplishment-paper .visit-section .field input:focus,
+.modern-accomplishment-paper .visit-section .field select:focus {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+
+/* Accomplishment Form: bottom border only */
+.branch-visit input,
+.branch-visit select,
+.branch-visit textarea,
+.teamleader input,
+.teamleader select,
+.teamleader textarea,
+.team-leader input,
+.team-leader select,
+.team-leader textarea,
+.hms-staff input,
+.hms-staff select,
+.hms-staff textarea,
+.hmsstaff input,
+.hmsstaff select,
+.hmsstaff textarea {
+  border: none !important;
+  border-bottom: 1px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}

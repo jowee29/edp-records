@@ -5,7 +5,8 @@ import { addDoc, collection, getDocs, orderBy, query, serverTimestamp, where } f
 import { db } from '../firebase';
 import { audit } from '../auth';
 
-const blank = { branchId:'', branchVisited:'', date:new Date().toISOString().slice(0,10), teamLeader:'', hmsStaff:'', findings:'', consumables:'', remark:'', confirmedBy:'', branchRepresentative:'' };
+const today = () => new Date().toISOString().slice(0,10);
+const blank = () => ({ branchId:'', branchVisited:'', date:today(), teamLeader:'', hmsStaff:'', findings:'', consumables:'', remark:'', confirmedBy:'', branchRepresentative:'' });
 const val = (v) => v === null || v === undefined || v === '' ? '' : String(v);
 const fmtDate = (d) => { if(!d) return ''; const [y,m,day]=String(d).split('-'); return y&&m&&day ? `${m}/${day}/${y}` : String(d); };
 
@@ -18,7 +19,7 @@ export default function Accomplishment(){
   const save=async(e)=>{e?.preventDefault();if(!form.branchId||!form.date||!form.findings.trim()){setError('Piliin ang branch, ilagay ang date, at ilagay ang findings/work done.');return}setSaving(true);setError('');setSaved(false);try{const payload={...form,groupId:profile?.groupId||branch?.groupId||'',createdBy:profile?.uid||'',branchName:branch?.branchName||form.branchVisited,branchSnapshot:branch?{branchName:branch.branchName,branchType:branch.branchType,company:branch.company,accountNo:branch.accountNo,telNo:branch.telNo,contactPerson:branch.contactPerson,contactNo:branch.contactNo,address:branch.address,oic:branch.oic,contactNo1:branch.contactNo1,isp:branch.isp,connType:branch.connType,plan:branch.plan,monthlyPayment:branch.monthlyPayment,ipAddress:branch.ipAddress,subnetMask:branch.subnetMask,defaultGateway:branch.defaultGateway,dns1:branch.dns1,dns2:branch.dns2,noOfComp:branch.noOfComp,printer2175:branch.printer2175,lx310ii:branch.lx310ii,colored:branch.colored}:null,createdAt:serverTimestamp(),updatedAt:serverTimestamp()};const ref=await addDoc(collection(db,'accomplishments'),payload);await audit({action:'CREATE_ACCOMPLISHMENT',details:`Created branch visit accomplishment for ${payload.branchName}`,targetUserId:ref.id});setSaved(true);setRecent(r=>[{id:ref.id,...payload},...r].slice(0,8));}catch(e){setError(e.message)}finally{setSaving(false)}};
   const openPrintPreview=()=>setPrintPreview(true);
   const closePrintPreview=()=>setPrintPreview(false);
-  const reset=()=>{setForm(blank);setError('');setSaved(false)};
+  const reset=()=>{setForm(blank());setError('');setSaved(false)};
   return <>
     <div className="page-title-row"><div><span className="eyebrow">FIELD SERVICE DOCUMENT</span><h1>Add Accomplishment Form</h1><p>Branch Visit Accomplishment Form — Excel template layout.</p></div><div className="page-actions no-print"><button className="outline-btn" type="button" onClick={reset}>Clear</button><button className="amber-btn" type="button" onClick={openPrintPreview}>🖨 Print Form</button></div></div>
     <div className="accomplishment-toolbar no-print"><div><b>Excel-style printable form</b><span> Letter portrait layout matching the supplied Branch Visit template.</span></div>{saved&&<span className="success-pill">✓ Saved to Firebase</span>}</div>
@@ -27,15 +28,14 @@ export default function Accomplishment(){
       <div className="form-cover">
         <div className="cover-brand"><img src={edpLogo} alt="EDP logo" /><div><span>EDP RECORDS</span><small>FIELD SERVICE MANAGEMENT</small></div></div>
         <div className="cover-title"><span>BRANCH VISIT</span><strong>ACCOMPLISHMENT FORM</strong><p>Branch visit documentation • Letter printable record</p></div>
-        <div className="cover-meta"><div><span>DATE</span><b>{fmtDate(form.date) || '—'}</b></div><div><span>BRANCH</span><b>{branch?.branchName || 'Select branch'}</b></div></div>
+        <div className="cover-meta"><div><span>DATE</span><b>{fmtDate(form.date) || fmtDate(today())}</b></div></div>
       </div>
 
       <section className="form-section visit-section">
         <div className="section-heading"><span>01</span><div><b>VISIT INFORMATION</b><small>Basic details of the branch visit and assigned personnel</small></div></div>
         <div className="form-grid four">
           <label className="field span-2"><span>BRANCH VISITED</span><select value={form.branchId} onChange={e=>{change('branchId',e.target.value);change('branchVisited',branches.find(b=>b.id===e.target.value)?.branchName||'')}} required><option value="">Select branch...</option>{branches.map(b=><option key={b.id} value={b.id}>{b.branchName}</option>)}</select></label>
-          <label className="field"><span>DATE</span><input type="date" value={form.date} onChange={e=>change('date',e.target.value)} required/></label>
-          <label className="field"><span>TEAM LEADER</span><input value={form.teamLeader} onChange={e=>change('teamLeader',e.target.value)} /></label>
+           <label className="field"><span>TEAM LEADER</span><input value={form.teamLeader} onChange={e=>change('teamLeader',e.target.value)} /></label>
           <label className="field span-2"><span>HMS STAFF</span><input value={form.hmsStaff} onChange={e=>change('hmsStaff',e.target.value)} /></label>
         </div>
       </section>
@@ -77,7 +77,7 @@ export default function Accomplishment(){
         </div>
       </section>
       <div className="modern-form-footer"><span>EMER CP#0917-806-5593</span><span>PATRICK/JOEY CP#0917-834-5296</span><b>EDP • BRANCH VISIT RECORD</b></div>
-      <div className="paper-save-actions no-print"><button type="button" className="outline-btn" onClick={reset}>Clear</button><button type="submit" className="amber-btn" disabled={saving||loading}>{saving?'Saving...':'Save Accomplishment'}</button><button type="button" className="outline-btn" onClick={openPrintPreview}>🖨 Print</button></div>
+      <div className="paper-save-actions no-print"><button type="button" className="outline-btn" onClick={reset}>Clear</button><button type="submit" className="amber-btn" disabled={saving||loading}>{saving?'Saving...':'Save Accomplishment'}</button><button type="button" className="outline-btn" onClick={()=>window.print()}>🖨 Print</button></div>
     </form>
     {printPreview&&<div className="print-preview-overlay no-print" role="dialog" aria-modal="true">
       <div className="print-preview-dialog">
@@ -150,7 +150,7 @@ export default function Accomplishment(){
 }
 
 function Inventory({branch}){const s=branch||{};return <div className="excel-inventory">
-  <div className="inventory-main-title">🖥️Branch Inventory &amp; Connectivity Information:</div>
+  <div className="inventory-main-title">🖥️Inventory &amp; Connectivity Information:</div>
   <div className="inventory-grid-head"><div>🧑‍💼 Branch Details</div><div>💻 Fixed Assets Inventory</div></div>
   <div className="inventory-grid-body">
     <div className="inventory-left"><Row l="Branch Manager:" v={s.oic}/><Row l="Manager's Contact Number:" v={s.contactNo1}/><Row l="Branch Contact Person:" v={s.contactPerson}/><Row l="Branch Contact Number:" v={s.contactNo}/></div>
