@@ -54,13 +54,15 @@ export default function Accomplishment(){
           <Info label="Telephone No." v={branch.telNo}/><Info label="Contact Person" v={branch.contactPerson}/><Info label="Contact No." v={branch.contactNo}/><Info label="Address" v={branch.address} wide/>
           <Info label="OIC / Branch Manager" v={branch.oic}/><Info label="OIC Contact No." v={branch.contactNo1}/>
         </div></div>
-        <div className="info-block"><h3>CONNECTIVITY</h3><div className="info-grid two">
-          <Info label="ISP" v={branch.isp}/><Info label="Connection Type" v={branch.connType}/><Info label="Plan" v={branch.plan}/><Info label="Monthly Payment" v={branch.monthlyPayment}/>
-          <Info label="IP Address" v={branch.ipAddress}/><Info label="Subnet Mask" v={branch.subnetMask}/><Info label="Default Gateway" v={branch.defaultGateway}/><Info label="DNS 1" v={branch.dns1}/><Info label="DNS 2" v={branch.dns2}/>
-        </div></div>
-        <div className="info-block"><h3>FIXED ASSETS</h3><div className="info-grid two">
-          <Info label="No. of Computers" v={branch.noOfComp}/><Info label="2175 / 2175II" v={branch.printer2175}/><Info label="LX-310II" v={branch.lx310ii}/><Info label="Colored" v={branch.colored}/>
-        </div></div>
+        <div className="reference-row-two">
+          <div className="info-block"><h3>CONNECTIVITY</h3><div className="info-grid two">
+            <Info label="ISP" v={branch.isp}/><Info label="Connection Type" v={branch.connType}/><Info label="Plan" v={branch.plan}/><Info label="Monthly Payment" v={branch.monthlyPayment}/>
+            <Info label="IP Address" v={branch.ipAddress}/><Info label="Subnet Mask" v={branch.subnetMask}/><Info label="Default Gateway" v={branch.defaultGateway}/><Info label="DNS 1" v={branch.dns1}/><Info label="DNS 2" v={branch.dns2}/>
+          </div></div>
+          <div className="info-block"><h3>FIXED ASSETS</h3><div className="info-grid two">
+            <Info label="No. of Computers" v={branch.noOfComp}/><Info label="2175 / 2175II" v={branch.printer2175}/><Info label="LX-310II" v={branch.lx310ii}/><Info label="Colored" v={branch.colored}/>
+          </div></div>
+        </div>
       </section>}
 
       <section className="form-section approval-section">
