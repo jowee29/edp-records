@@ -40,11 +40,16 @@ export default function Accomplishment(){
         </div>
       </section>
 
-      <section className="form-section narrative-section">
-        <label className="field"><span>FINDINGS / WORK DONE <em>*</em></span><textarea className="report-area" value={form.findings} onChange={e=>change('findings',e.target.value)} required placeholder="Enter findings, work performed, issues encountered and actions taken..." /></label>
+      <section className="form-section narrative-section findings-section">
+        <div className="section-heading"><span>02</span><div><b>FINDINGS / WORK DONE</b><small>Document the findings, work performed, issues and actions taken</small></div></div>
+        <label className="field"><span>FINDINGS / WORK DONE <em>*</em></span><textarea className="report-area" value={form.findings} onChange={e => change('findings', e.target.value)} rows={30} required placeholder="Enter findings, work performed, issues encountered and actions taken..." /></label>
+      </section>
+
+      <section className="form-section consumables-section">
+        <div className="section-heading"><span>03</span><div><b>CONSUMABLE ITEM USED &amp; REMARKS</b><small>Record consumables used and additional remarks</small></div></div>
         <div className="form-grid two">
-          <label className="field"><span>CONSUMABLE ITEM USED</span><textarea value={form.consumables} onChange={e=>change('consumables',e.target.value)} placeholder="List consumables used..." /></label>
-          <label className="field"><span>REMARK</span><textarea value={form.remark} onChange={e=>change('remark',e.target.value)} placeholder="Additional remarks..." /></label>
+          <label className="field"><span>CONSUMABLE ITEM USED</span><textarea className="consumables-form-area" value={form.consumables} onChange={e=>change('consumables',e.target.value)} placeholder="List consumables used..." /></label>
+          <label className="field"><span>REMARK</span><textarea className="remark-form-area" value={form.remark} onChange={e=>change('remark',e.target.value)} placeholder="Additional remarks..." /></label>
         </div>
       </section>
 
@@ -97,16 +102,19 @@ export default function Accomplishment(){
                   <div className="field span-2"><span>HMS STAFF</span><div className="preview-field">{val(form.hmsStaff)}</div></div>
                 </div>
               </section>
-              <section className="form-section narrative-section">
-                <div className="section-heading"><span>02</span><div><b>WORK REPORT</b><small>Document the work performed, consumables and remarks</small></div></div>
+              <section className="form-section narrative-section findings-section">
+                <div className="section-heading"><span>02</span><div><b>FINDINGS / WORK DONE</b><small>Document the findings, work performed, issues and actions taken</small></div></div>
                 <div className="field"><span>FINDINGS / WORK DONE</span><div className="preview-textarea report-area">{val(form.findings)}</div></div>
+              </section>
+              <section className="form-section consumables-section">
+                <div className="section-heading"><span>03</span><div><b>CONSUMABLE ITEM USED &amp; REMARKS</b><small>Record consumables used and additional remarks</small></div></div>
                 <div className="form-grid two">
-                  <div className="field"><span>CONSUMABLE ITEM USED</span><div className="preview-textarea">{val(form.consumables)}</div></div>
-                  <div className="field"><span>REMARK</span><div className="preview-textarea">{val(form.remark)}</div></div>
+                  <div className="field"><span>CONSUMABLE ITEM USED</span><div className="preview-textarea consumables-form-area">{val(form.consumables)}</div></div>
+                  <div className="field"><span>REMARK</span><div className="preview-textarea remark-form-area">{val(form.remark)}</div></div>
                 </div>
               </section>
               {branch&&<section className="form-section reference-section">
-                <div className="section-heading"><span>03</span><div><b>BRANCH REFERENCE & INVENTORY</b><small>Complete branch information captured from Branch Management</small></div></div>
+                <div className="section-heading"><span>04</span><div><b>BRANCH REFERENCE & INVENTORY</b><small>Complete branch information captured from Branch Management</small></div></div>
                 <div className="info-block"><h3>BRANCH PROFILE</h3><div className="info-grid four">
                   <Info label="Branch Name" v={branch.branchName}/><Info label="Branch Type" v={branch.branchType}/><Info label="Company" v={branch.company}/><Info label="Account No." v={branch.accountNo}/>
                   <Info label="Telephone No." v={branch.telNo}/><Info label="Contact Person" v={branch.contactPerson}/><Info label="Contact No." v={branch.contactNo}/><Info label="Address" v={branch.address} wide/>
@@ -121,7 +129,7 @@ export default function Accomplishment(){
                 </div></div>
               </section>}
               <section className="form-section approval-section">
-                <div className="section-heading"><span>04</span><div><b>CONFIRMATION</b><small>Sign-off by the HMS Team Leader and Branch Representative</small></div></div>
+                <div className="section-heading"><span>05</span><div><b>CONFIRMATION</b><small>Sign-off by the HMS Team Leader and Branch Representative</small></div></div>
                 <div className="signature-grid">
                   <div className="signature-card"><div className="field"><span>CONFIRMED BY HMS TEAM LEADER</span><div className="preview-field">{val(form.confirmedBy)}</div></div><div className="signature-line"></div><small>Signature over Printed Name</small></div>
                   <div className="signature-card"><div className="field"><span>BRANCH REPRESENTATIVE</span><div className="preview-field">{val(form.branchRepresentative)}</div></div><div className="signature-line"></div><small>Signature over Printed Name</small></div>
