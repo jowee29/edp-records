@@ -1,8 +1,5 @@
-import { useEffect, useState } from 'react';
 import edpLogo from './assets/edp-logo.png';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
 import { useAuth, audit } from './auth';
 import { Login, ForgotPassword } from './pages/Auth';
 import Dashboard from './pages/Dashboard';
@@ -40,28 +37,6 @@ const Icon=({name})=>{
   };
   return <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>
 };
-
-
-function NotificationBell({profile}){
-  const [notes,setNotes]=useState([]);
-  const [open,setOpen]=useState(false);
-  useEffect(()=>{
-    if(!profile)return;
-    const q=profile.role==='super_admin'
-      ? query(collection(db,'notifications'),where('recipientRole','==','super_admin'))
-      : query(collection(db,'notifications'),where('recipientUserId','==',profile.uid));
-    return onSnapshot(q,snap=>setNotes(snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,20)));
-  },[profile]);
-  const unread=notes.filter(n=>!n.read).length;
-  const mark=async n=>{try{await updateDoc(doc(db,'notifications',n.id),{read:true})}catch(e){}};
-  return <div className="notification-wrap">
-    <button className="notification-btn" onClick={()=>setOpen(v=>!v)} aria-label="Notifications">🔔{unread>0&&<span className="notification-badge">{unread>9?'9+':unread}</span>}</button>
-    {open&&<div className="notification-menu">
-      <div className="notification-head"><b>Notifications</b>{unread>0&&<span>{unread} unread</span>}</div>
-      {notes.length===0?<div className="notification-empty">No notifications.</div>:notes.map(n=><button key={n.id} className={`notification-item ${n.read?'':'unread'}`} onClick={()=>mark(n)}><b>{n.title||'Notification'}</b><span>{n.message||''}</span></button>)}
-    </div>}
-  </div>;
-}
 
 function Layout({children}){
   const {profile,logout}=useAuth();
@@ -112,7 +87,7 @@ function Layout({children}){
         <div className="sidebar-brand"><img src={edpLogo} alt="EDP"/><div><strong>EDP Records</strong><span>MANAGEMENT SYSTEM</span></div></div>
         <NavLink to="/profile" className="mobile-avatar">{(profile?.name||'U').slice(0,1).toUpperCase()}</NavLink>
       </header>
-      <div className="top-notification no-print"><NotificationBell profile={profile}/></div><main className="page-container">{children}</main>
+      <main className="page-container">{children}</main>
     </div>
   </div>
 }
