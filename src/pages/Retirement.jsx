@@ -79,10 +79,8 @@ export default function Retirement(){
     setSaving(true);setError('');
     try{
       const item=r.requestedData||{};
-      if(r.action==='delete'){ continue; } else {
-        await updateDoc(doc(db,'retirements',r.retirementId),{...item,updatedAt:serverTimestamp(),approvedBy:profile.uid,approvedAt:serverTimestamp()});
-        await audit({action:'APPROVE_UPDATE_RETIREMENT',details:`Approved retirement edit requested by ${r.requestedByName}`,targetUserId:r.retirementId});
-      }
+      await updateDoc(doc(db,'retirements',r.retirementId),{...item,updatedAt:serverTimestamp(),approvedBy:profile.uid,approvedAt:serverTimestamp()});
+      await audit({action:'APPROVE_UPDATE_RETIREMENT',details:`Approved retirement edit requested by ${r.requestedByName}`,targetUserId:r.retirementId});
       await updateDoc(doc(db,'retirementRequests',r.id),{status:'approved',reviewedBy:profile.uid,reviewedByName:profile.name||profile.username||'',reviewedAt:serverTimestamp()});
       await addDoc(collection(db,'notifications'),{type:'RETIREMENT_APPROVAL_RESULT',recipientUserId:r.requestedBy,title:'Retirement request approved',message:`Your retirement ${r.action==='delete'?'deletion':'edit'} request was approved by Super Admin.`,read:false,createdAt:serverTimestamp()});
       setConfirm(null);await load();
