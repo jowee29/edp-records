@@ -397,3 +397,14 @@ table{border-radius:10px;overflow:hidden}
   .page-number{flex:1}
   .branch-list-note{display:none}
 }
+
+
+/* Change Password */
+.change-password-card{margin-top:12px;padding:14px}
+.change-password-card .panel-heading{margin-bottom:12px}
+.password-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end}
+.password-form label{display:flex;flex-direction:column;gap:5px;color:#8b979a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.password-form input{margin-top:0}
+.password-form button{height:34px}
+.password-form .success,.password-form .error{grid-column:1/-1;margin:0}
+@media(max-width:800px){.password-form{grid-template-columns:1fr}.password-form .success,.password-form .error{grid-column:auto}}
