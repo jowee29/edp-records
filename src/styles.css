@@ -479,3 +479,82 @@ body.modal-open{overflow:hidden}
  .lav-personnel-premium{margin:0 8mm!important;padding:4mm 0!important}
  .lav-personnel-premium input{border:0!important;border-bottom:1px solid #777!important;border-radius:0!important;padding:2px 3px!important}
 }
+
+/* FIX: keep the Add Accomplishment form visible when printing.
+   A legacy history-modal print rule hid body contents globally. */
+@media print {
+  body:has(.letter-accomplishment-paper) * { visibility: hidden !important; }
+  body:has(.letter-accomplishment-paper) .letter-accomplishment-paper,
+  body:has(.letter-accomplishment-paper) .letter-accomplishment-paper * { visibility: visible !important; }
+  body:has(.letter-accomplishment-paper) .letter-accomplishment-paper { position: relative !important; }
+}
+
+/* Add Accomplishment final visual cleanup */
+.letter-accomplishment-paper,
+.letter-accomplishment-paper * {
+  font-family: "Courier New", Courier, monospace !important;
+}
+
+/* Keep the printable accomplishment sheet clean and white. */
+.letter-accomplishment-paper {
+  background: #fff !important;
+  color: #111 !important;
+}
+
+/* Remove field boxes/borders requested for Date and Branch. */
+.lav-header-fields input,
+.lav-header-fields select {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #111 !important;
+}
+
+/* Remove borders from confirmation fields. */
+.lav-sign input,
+.lav-sign select {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #111 !important;
+}
+
+/* Remove the visible form-field boxes while keeping the form structure. */
+.lav-personnel-premium input {
+  background: #fff !important;
+  color: #111 !important;
+}
+
+@media print {
+  .letter-accomplishment-paper,
+  .letter-accomplishment-paper * {
+    font-family: "Courier New", Courier, monospace !important;
+  }
+
+  .letter-accomplishment-paper,
+  .premium-accomplishment-header,
+  .lav-personnel-premium,
+  .lav-section,
+  .lav-section textarea,
+  .lav-sign input,
+  .lav-sign select,
+  .lav-header-fields.print-only div {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  .lav-header-fields.print-only div {
+    border: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .lav-sign input,
+  .lav-sign select {
+    border: 0 !important;
+  }
+}
