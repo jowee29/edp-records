@@ -10,43 +10,38 @@ service cloud.firestore {
     match /users/{uid} {
       allow create: if (isSuperAdmin() && request.resource.data.role in ['admin','employee']) || (signedIn() && request.auth.uid == uid && request.resource.data.role == 'employee');
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || resource.data.position == 'Team Leader');
-      allow update: if signedIn() && (
-        (request.auth.uid == uid && request.resource.data.role == resource.data.role) ||
-        (isSuperAdmin() && (
-          (resource.data.role == 'super_admin' && request.resource.data.role == 'super_admin') ||
-          (resource.data.role != 'super_admin' && request.resource.data.role in ['admin','employee'])
-        )) ||
-        (isAdmin() && resource.data.role != 'super_admin' && request.resource.data.role != 'super_admin')
-      );
+      allow update: if signedIn() && ((request.auth.uid == uid && request.resource.data.role == resource.data.role) || (isSuperAdmin() && ((resource.data.role == 'super_admin' && request.resource.data.role == 'super_admin') || (resource.data.role != 'super_admin' && request.resource.data.role in ['admin','employee']))) || (isAdmin() && resource.data.role != 'super_admin' && request.resource.data.role != 'super_admin'));
       allow delete: if isSuperAdmin();
     }
-
-    match /groups/{groupId} {
-      allow read: if signedIn();
-      allow create, update, delete: if isSuperAdmin();
-    }
-
+    match /groups/{groupId} { allow read: if signedIn(); allow create, update, delete: if isSuperAdmin(); }
     match /branches/{branchId} {
       allow read: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
       allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
-      allow update: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
-      allow delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
+      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
     }
-
     match /accomplishments/{accomplishmentId} {
       allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
       allow read: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
-      allow update: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
-      allow delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
+      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
     }
-
     match /retirements/{retirementId} {
       allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
       allow read: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
-      allow update: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
-      allow delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId);
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
-
+    match /retirementRequests/{requestId} {
+      allow create: if isStaff() && request.resource.data.requestedBy == request.auth.uid && request.resource.data.status == 'pending';
+      allow read: if isSuperAdmin() || (signedIn() && resource.data.requestedBy == request.auth.uid);
+      allow update: if isSuperAdmin();
+      allow delete: if false;
+    }
+    match /notifications/{notificationId} {
+      allow create: if isStaff() && ((request.resource.data.recipientRole == 'super_admin') || (request.resource.data.recipientUserId == request.auth.uid));
+      allow read: if isSuperAdmin() || (signedIn() && resource.data.recipientUserId == request.auth.uid);
+      allow update: if isSuperAdmin() || (signedIn() && resource.data.recipientUserId == request.auth.uid);
+      allow delete: if isSuperAdmin();
+    }
     match /auditLogs/{logId} {
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow read: if isSuperAdmin();
