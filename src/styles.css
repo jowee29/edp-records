@@ -438,7 +438,7 @@ body.modal-open{overflow:hidden}
 
 /* Branch Visit Accomplishment — Letter Size layout based on supplied template */
 .letter-accomplishment-paper{width:8.5in;min-height:11in;box-sizing:border-box;margin:0 auto;background:#fff;color:#111;border:1px solid #8d8d8d;box-shadow:0 12px 36px rgba(0,0,0,.16);font-family:Arial,Helvetica,sans-serif;font-size:10px;overflow:hidden}
-.lav-header{border:2px solid #111;margin:16px 16px 0}.lav-title{text-align:center;font-size:17px;font-weight:900;letter-spacing:.04em;padding:9px 8px 7px;border-bottom:1px solid #111}.lav-meta{display:grid;grid-template-columns:1fr 190px;gap:0;padding:7px 9px;font-size:9px}.lav-meta span+span{text-align:left}.lav-meta b{font-weight:700}.lav-personnel{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 16px;padding:7px 9px;border-left:2px solid #111;border-right:2px solid #111;border-bottom:2px solid #111}.lav-personnel label,.lav-sign label{font-weight:800;font-size:9px}.lav-personnel input{border:0;border-bottom:1px solid #777;outline:0;width:72%;font-size:10px;padding:2px 4px;background:#fff}.lav-section{margin:10px 16px 0;border:1px solid #222}.lav-section-title{font-weight:900;font-size:9px;padding:6px 8px;border-bottom:1px solid #222}.lav-section textarea{display:block;width:100%;box-sizing:border-box;border:0;resize:vertical;background:#fff;outline:0;padding:7px 8px;font:10px Arial;line-height:1.45}.lav-findings{height:145px;min-height:145px}.lav-consumables{height:55px;min-height:55px}.lav-inventory-title{margin:12px 16px 0;border:1px solid #222;border-bottom:0;font-weight:900;font-size:10px;padding:7px 8px}.lav-grid-head{display:grid;grid-template-columns:1fr 1fr;margin:0 16px;border:1px solid #222;background:#e9e9e9}.lav-grid-head>div{padding:6px 8px;font-weight:900;font-size:9px}.lav-grid-head>div+div{border-left:1px solid #222}.lav-grid-body{display:grid;grid-template-columns:1fr 1fr;margin:0 16px;border:1px solid #222;border-top:0}.lav-grid-body>div{min-height:83px;padding:5px 8px;box-sizing:border-box}.lav-grid-body>div+div{border-left:1px solid #222}.excel-row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted #999;padding:4px 0;min-height:17px;box-sizing:border-box}.excel-row:last-child{border-bottom:0}.excel-row span{font-size:8px}.excel-row strong{font-size:8.5px;text-align:right;word-break:break-word}.lav-lower>div{min-height:91px}.lav-address{font-size:9px;line-height:1.4}.lav-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lav-pair .excel-row{display:block}.lav-pair .excel-row strong{display:block;text-align:left;margin-top:2px}.lav-confirm{display:grid;grid-template-columns:1fr 1fr;gap:55px;margin:16px 32px 10px}.lav-sign{text-align:center}.lav-sign label{display:block}.lav-sign input,.lav-sign select{display:block;width:90%;margin:5px auto 0;border:0;border-bottom:1px solid #888;background:#fff;outline:0;text-align:center;font-size:9px;padding:3px}.lav-sign-line{border-bottom:1px solid #222;height:25px;width:88%;margin:0 auto 4px}.lav-sign small{font-size:7px}.letter-accomplishment-paper .paper-save-actions{margin:0;padding:10px 16px;background:#f3f4f4;border-top:1px solid #ccc}
+.lav-header{border:2px solid #111;margin:16px 16px 0}.lav-title{text-align:center;font-size:17px;font-weight:900;letter-spacing:.04em;padding:9px 8px 7px;border-bottom:1px solid #111}.lav-meta{display:grid;grid-template-columns:1fr 190px;gap:0;padding:7px 9px;font-size:9px}.lav-meta span+span{text-align:left}.lav-meta b{font-weight:700}.lav-personnel{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:0 16px;padding:7px 9px;border-left:2px solid #111;border-right:2px solid #111;border-bottom:2px solid #111}.lav-personnel label,.lav-sign label{font-weight:800;font-size:9px}.lav-personnel input{border:0;border-bottom:1px solid #777;outline:0;width:72%;font-size:10px;padding:2px 4px;background:#fff}.lav-section{margin:10px 16px 0;border:1px solid #222}.lav-section-title{font-weight:900;font-size:9px;padding:6px 8px;border-bottom:1px solid #222}.lav-section textarea{display:block;width:100%;box-sizing:border-box;border:0;resize:vertical;background:#fff!important;color:#111!important;outline:0;padding:7px 8px;font:10px "Courier New",Courier,monospace;line-height:1.45}.lav-findings{height:145px;min-height:145px}.lav-consumables{height:55px;min-height:55px}.lav-inventory-title{margin:12px 16px 0;border:1px solid #222;border-bottom:0;font-weight:900;font-size:10px;padding:7px 8px}.lav-grid-head{display:grid;grid-template-columns:1fr 1fr;margin:0 16px;border:1px solid #222;background:#e9e9e9}.lav-grid-head>div{padding:6px 8px;font-weight:900;font-size:9px}.lav-grid-head>div+div{border-left:1px solid #222}.lav-grid-body{display:grid;grid-template-columns:1fr 1fr;margin:0 16px;border:1px solid #222;border-top:0}.lav-grid-body>div{min-height:83px;padding:5px 8px;box-sizing:border-box}.lav-grid-body>div+div{border-left:1px solid #222}.excel-row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted #999;padding:4px 0;min-height:17px;box-sizing:border-box}.excel-row:last-child{border-bottom:0}.excel-row span{font-size:8px}.excel-row strong{font-size:8.5px;text-align:right;word-break:break-word}.lav-lower>div{min-height:91px}.lav-address{font-size:9px;line-height:1.4}.lav-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lav-pair .excel-row{display:block}.lav-pair .excel-row strong{display:block;text-align:left;margin-top:2px}.lav-confirm{display:grid;grid-template-columns:1fr 1fr;gap:55px;margin:16px 32px 10px}.lav-sign{text-align:center}.lav-sign label{display:block}.lav-sign input,.lav-sign select{display:block;width:90%;margin:5px auto 0;border:0;border-bottom:1px solid #888;background:#fff;outline:0;text-align:center;font-size:9px;padding:3px}.lav-sign-line{border-bottom:1px solid #222;height:25px;width:88%;margin:0 auto 4px}.lav-sign small{font-size:7px}.letter-accomplishment-paper .paper-save-actions{margin:0;padding:10px 16px;background:#f3f4f4;border-top:1px solid #ccc}
 @media(max-width:700px){.letter-accomplishment-paper{width:100%;border:0;box-shadow:none}.lav-header,.lav-personnel,.lav-section,.lav-inventory-title,.lav-grid-head,.lav-grid-body{margin-left:8px;margin-right:8px}.lav-meta{grid-template-columns:1fr}.lav-personnel,.lav-grid-head,.lav-grid-body,.lav-confirm{grid-template-columns:1fr}.lav-grid-body>div+div{border-left:0;border-top:1px solid #222}.lav-confirm{gap:25px;margin-left:18px;margin-right:18px}.lav-personnel{gap:8px}}
 @media print{ @page{size:Letter portrait;margin:0} body{background:#fff!important}.topbar,.page-title-row,.accomplishment-toolbar,.error,.recent-accomplishments,.no-print{display:none!important}.page-container{width:100%!important;margin:0!important;padding:0!important}.letter-accomplishment-paper{width:8.5in;height:11in;min-height:11in;margin:0;border:0;box-shadow:none;overflow:hidden}.lav-header{margin:11mm 8mm 0}.lav-personnel{margin:0 8mm;border-bottom:2px solid #111}.lav-section{margin:5mm 8mm 0}.lav-findings{height:42mm;min-height:42mm}.lav-consumables{height:16mm;min-height:16mm}.lav-inventory-title{margin:4mm 8mm 0 8mm}.lav-grid-head,.lav-grid-body{margin-left:8mm;margin-right:8mm}.lav-grid-body>div{min-height:22mm}.lav-lower>div{min-height:24mm}.lav-confirm{margin-top:7mm}.letter-accomplishment-paper .paper-save-actions{display:none!important}.lav-section textarea,.lav-personnel input,.lav-sign input,.lav-sign select{color:#000!important;background:#fff!important}}
 
@@ -556,5 +556,54 @@ body.modal-open{overflow:hidden}
   .lav-sign input,
   .lav-sign select {
     border: 0 !important;
+  }
+}
+/* Accomplishment text areas: clean white writing fields */
+.letter-accomplishment-paper .lav-section textarea,
+.letter-accomplishment-paper textarea.lav-findings,
+.letter-accomplishment-paper textarea.lav-consumables {
+  background:#fff!important;
+  color:#111!important;
+  -webkit-text-fill-color:#111!important;
+  font-family:"Courier New",Courier,monospace!important;
+}
+
+/* Final typography + larger Date/Branch fields */
+.letter-accomplishment-paper,
+.letter-accomplishment-paper * {
+  font-family: "Arial Black", Arial, Helvetica, sans-serif !important;
+}
+
+.lav-header-fields label {
+  font-size: 9px !important;
+}
+
+.lav-header-fields input,
+.lav-header-fields select {
+  height: 46px !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  padding: 8px 10px !important;
+}
+
+.lav-header-fields {
+  grid-template-columns: 140px 260px !important;
+  gap: 12px !important;
+}
+
+@media print {
+  .letter-accomplishment-paper,
+  .letter-accomplishment-paper * {
+    font-family: "Arial Black", Arial, Helvetica, sans-serif !important;
+  }
+  .lav-header-fields.print-only {
+    grid-template-columns: 120px 210px !important;
+    gap: 9px !important;
+  }
+  .lav-header-fields.print-only span {
+    font-size: 7px !important;
+  }
+  .lav-header-fields.print-only b {
+    font-size: 10px !important;
   }
 }
