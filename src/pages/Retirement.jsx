@@ -35,13 +35,21 @@ export default function Retirement(){
     e.preventDefault();setSaving(true);setError('');setSaved(false);
     try{
       const payload={...form,groupId:profile.groupId||'unassigned',updatedAt:serverTimestamp()};
-      if(editing){await updateDoc(doc(db,'retirements',editing),payload);await audit({action:'UPDATE_RETIREMENT',details:`Updated retirement record for ${form.assetCode||form.itemProduct}`,targetUserId:editing})}
+      if(editing){
+        if(profile.role!=='super_admin') throw new Error('Only Super Admin can edit retirement records.');
+        await updateDoc(doc(db,'retirements',editing),payload);
+        await audit({action:'UPDATE_RETIREMENT',details:`Updated retirement record for ${form.assetCode||form.itemProduct}`,targetUserId:editing})
+      }
       else {payload.createdBy=profile.uid;payload.createdByName=profile.name||profile.username||'';payload.createdAt=serverTimestamp();const ref=await addDoc(collection(db,'retirements'),payload);await audit({action:'CREATE_RETIREMENT',details:`Created retirement record for ${form.assetCode||form.itemProduct}`,targetUserId:ref.id})}
       await load();setSaved(true);reset();setSaved(true);
     }catch(e){setError(e.message)}finally{setSaving(false)}
   };
-  const edit=x=>{setEditing(x.id);setForm({...blank,...x});window.scrollTo({top:0,behavior:'smooth'})};
-  const remove=async x=>{if(!confirm(`Delete retirement record for ${x.assetCode||x.itemProduct||'this item'}?`))return;try{await deleteDoc(doc(db,'retirements',x.id));await audit({action:'DELETE_RETIREMENT',details:`Deleted retirement record for ${x.assetCode||x.itemProduct}`,targetUserId:x.id});await load()}catch(e){setError(e.message)}};
+  const edit=x=>{if(profile.role!=='super_admin')return;setEditing(x.id);setForm({...blank,...x});window.scrollTo({top:0,behavior:'smooth'})};
+  const remove=async x=>{
+    if(profile.role!=='super_admin'){setError('Only Super Admin can delete retirement records.');return;}
+    if(!confirm(`Delete retirement record for ${x.assetCode||x.itemProduct||'this item'}?`))return;
+    try{await deleteDoc(doc(db,'retirements',x.id));await audit({action:'DELETE_RETIREMENT',details:`Deleted retirement record for ${x.assetCode||x.itemProduct}`,targetUserId:x.id});await load()}catch(e){setError(e.message)}
+  };
   const filtered=useMemo(()=>{const q=search.trim().toLowerCase();return items.filter(x=>[x.branchName,x.assetCode,x.serialNo,x.itemProduct,x.defectiveNote,x.datePurchase,x.dateRetired,x.receivedBy,x.receivedDate].join(' ').toLowerCase().includes(q))},[items,search]);
   const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));const safePage=Math.min(page,totalPages);const shown=filtered.slice((safePage-1)*PAGE_SIZE,safePage*PAGE_SIZE);
   useEffect(()=>{setPage(1)},[search]);
@@ -69,7 +77,7 @@ export default function Retirement(){
     <div className="toolbar-row no-print"><div className="search-wrap"><span>⌕</span><input placeholder="Search branch, asset code, serial no., product..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} record{filtered.length===1?'':'s'}</span></div>
     <div className="content-card table-wrap retirement-table">
       <table><thead><tr><th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th><th>ACTION</th></tr></thead>
-      <tbody>{loading?<tr><td colSpan="10" className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}><td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td></tr>):<tr><td colSpan="10" className="empty-state">No retirement records found.</td></tr>}</tbody></table>
+      <tbody>{loading?<tr><td colSpan="10" className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}><td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td><div className="actions">{profile.role==='super_admin'&&<><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></>}</div></td></tr>):<tr><td colSpan="10" className="empty-state">No retirement records found.</td></tr>}</tbody></table>
       {!loading&&filtered.length>0&&<div className="table-pagination no-print"><span>Showing {(safePage-1)*PAGE_SIZE+1}–{Math.min(safePage*PAGE_SIZE,filtered.length)} of {filtered.length}</span><div><button className="ghost-btn" disabled={safePage===1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Previous</button><b> Page {safePage} of {totalPages} </b><button className="ghost-btn" disabled={safePage===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Next</button></div></div>}
     </div>
   </>;
