@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { audit, useAuth } from '../auth';
@@ -12,6 +13,7 @@ export default function Retirement(){
   const [branches,setBranches]=useState([]),[items,setItems]=useState([]),[form,setForm]=useState({...blank});
   const [editing,setEditing]=useState(null),[modalOpen,setModalOpen]=useState(false),[search,setSearch]=useState(''),[page,setPage]=useState(1);
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
+  const [showImport,setShowImport]=useState(false),[importRows,setImportRows]=useState([]),[importFile,setImportFile]=useState(null),[importing,setImporting]=useState(false),[importError,setImportError]=useState('');
 
   const load=async()=>{
     if(!profile)return; setLoading(true); setError('');
@@ -48,6 +50,43 @@ export default function Retirement(){
     }catch(e){setError(e.message);return false}finally{setSaving(false)}
   };
   const edit=x=>{if(profile.role!=='super_admin')return;setEditing(x.id);setForm({...blank,...x});setError('');setSaved(false);setModalOpen(true);document.body.classList.add('modal-open')};
+  const exportRetirements=async()=>{
+    const rows=filtered.map(x=>({
+      'BRANCH NAME':val(x.branchName),'ASSET CODE':val(x.assetCode),'SERIAL NO.':val(x.serialNo),
+      'ITEM PRODUCTS':val(x.itemProduct),'DEFECTIVE NOTE':val(x.defectiveNote),'DATE PURCHASE':val(x.datePurchase),
+      'DATE RETIRED':val(x.dateRetired),'RECEIVED BY':val(x.receivedBy),'RECEIVED DATE':val(x.receivedDate)
+    }));
+    const ws=XLSX.utils.json_to_sheet(rows);
+    ws['!cols']=[{wch:24},{wch:16},{wch:20},{wch:28},{wch:42},{wch:16},{wch:16},{wch:24},{wch:16}];
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Retirement');
+    const stamp=new Date().toISOString().slice(0,10);XLSX.writeFile(wb,`EDP_Retirement_${stamp}.xlsx`);
+    try{await audit({action:'EXPORT_RETIREMENTS',details:`Exported ${rows.length} retirement records to Excel`})}catch(e){console.warn('Audit export failed',e)}
+  };
+  const normalizeKey=x=>String(x??'').trim().toUpperCase().replace(/[._\-/]+/g,' ').replace(/\s+/g,' ');
+  const toImportRow=row=>{
+    const get=(...keys)=>{for(const k of keys){const target=normalizeKey(k);const found=Object.keys(row).find(h=>normalizeKey(h)===target);if(found!==undefined)return row[found]}return ''};
+    return {branchName:get('BRANCH NAME','BRANCH'),assetCode:get('ASSET CODE'),serialNo:get('SERIAL NO.','SERIAL NUMBER'),itemProduct:get('ITEM PRODUCTS','ITEM PRODUCT','PRODUCT'),defectiveNote:get('DEFECTIVE NOTE','DEFECT'),datePurchase:get('DATE PURCHASE'),dateRetired:get('DATE RETIRED'),receivedBy:get('RECEIVED BY'),receivedDate:get('RECEIVED DATE')};
+  };
+  const handleImportFile=async e=>{
+    const file=e.target.files?.[0];if(!file)return;setImportFile(file);setImportError('');setImportRows([]);
+    try{const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:'array',cellDates:false});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{defval:''});const mapped=rows.map(toImportRow).filter(r=>Object.values(r).some(v=>String(v??'').trim()!==''));setImportRows(mapped);if(!mapped.length)throw new Error('Walang records na nakita sa file.')}catch(e){setImportError(e.message||'Hindi mabasa ang Excel file.');setImportRows([])}};
+  const importRetirements=async()=>{
+    if(!importRows.length)return;setImporting(true);setImportError('');
+    try{
+      const branchMap=new Map(branches.map(b=>[normalizeKey(b.branchName),b]));
+      const invalid=[];const payloads=[];
+      importRows.forEach((r,i)=>{
+        const b=branchMap.get(normalizeKey(r.branchName));
+        if(!b||!r.assetCode||!r.itemProduct||!r.dateRetired){invalid.push(`Row ${i+2}: branch, asset code, item products, at date retired are required${b?'':' (branch not found)'}`);return;}
+        payloads.push({...r,branchId:b.id,branchName:b.branchName,groupId:profile.groupId||'unassigned',createdBy:profile.uid,createdByName:profile.name||profile.username||'',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+      });
+      if(invalid.length)throw new Error(invalid.slice(0,8).join(' | ')+(invalid.length>8?` | +${invalid.length-8} more`:''));
+      for(const payload of payloads){const ref=await addDoc(collection(db,'retirements'),payload);try{await audit({action:'CREATE_RETIREMENT',details:`Imported retirement record for ${payload.assetCode||payload.itemProduct}`,targetUserId:ref.id})}catch(e){console.warn('Audit import failed',e)}}
+      await audit({action:'IMPORT_RETIREMENTS',details:`Imported ${payloads.length} retirement records from ${importFile?.name||'Excel'}`});
+      setImportRows([]);setImportFile(null);setShowImport(false);await load();setSaved(true);
+    }catch(e){setImportError(e.message||'Hindi ma-import ang retirement records.')}finally{setImporting(false)}
+  };
+
   const remove=async x=>{
     if(profile.role!=='super_admin'){setError('Only Super Admin can delete retirement records.');return;}
     if(!confirm(`Delete retirement record for ${x.assetCode||x.itemProduct||'this item'}?`))return;
@@ -58,9 +97,22 @@ export default function Retirement(){
   useEffect(()=>{setPage(1)},[search]);
 
   return <>
-    <div className="page-title-row"><div><span className="eyebrow">ASSET MANAGEMENT</span><h1>Retirement</h1><p>Record and monitor retired assets for all authorized branch users.</p></div><div className="page-actions no-print"><button className="amber-btn" onClick={()=>{reset();setModalOpen(true);document.body.classList.add('modal-open')}}>＋ Add Retirement Record</button></div></div>
+    <div className="page-title-row"><div><span className="eyebrow">ASSET MANAGEMENT</span><h1>Retirement</h1><p>Record and monitor retired assets for all authorized branch users.</p></div><div className="page-actions no-print"><button className="ghost-btn" type="button" onClick={exportRetirements}>⇩ Export Excel</button><button className="ghost-btn" type="button" onClick={()=>{setImportRows([]);setImportFile(null);setImportError('');setShowImport(true)}}>⇧ Import Excel</button><button className="amber-btn" onClick={()=>{reset();setModalOpen(true);document.body.classList.add('modal-open')}}>＋ Add Retirement Record</button></div></div>
     {error&&<div className="error no-print">{error}</div>}
     {saved&&<div className="success no-print">Retirement record saved successfully.</div>}
+    {showImport&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowImport(false)}}>
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="import-retirement-title">
+        <div className="modal-header"><div><p className="eyebrow">BULK DATA ENTRY</p><h2 id="import-retirement-title">Import Retirement Records</h2><p className="subtext">Upload an Excel file and review the records before saving them to Firebase.</p></div><button className="modal-close" type="button" aria-label="Close" onClick={()=>setShowImport(false)}>×</button></div>
+        <div className="modal-body">
+          <div className="import-help"><div className="import-help-title">Import requirements</div><p><b>Required:</b> BRANCH NAME, ASSET CODE, ITEM PRODUCTS and DATE RETIRED. The branch name must already exist in Branch Management.</p><div className="import-column-list">BRANCH NAME · ASSET CODE · SERIAL NO. · ITEM PRODUCTS · DEFECTIVE NOTE · DATE PURCHASE · DATE RETIRED · RECEIVED BY · RECEIVED DATE</div></div>
+          <label className="file-picker"><span>{importFile?importFile.name:'Choose Excel file (.xlsx/.xls)'}</span><input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={handleImportFile}/></label>
+          {importError&&<div className="error">{importError}</div>}
+          {importRows.length>0&&<div className="import-preview"><b>{importRows.length} record{importRows.length===1?'':'s'} ready to import.</b><div className="table-wrap"><table><thead><tr><th>BRANCH</th><th>ASSET CODE</th><th>ITEM</th><th>DATE RETIRED</th></tr></thead><tbody>{importRows.slice(0,8).map((r,i)=><tr key={i}><td>{val(r.branchName)||'—'}</td><td>{val(r.assetCode)||'—'}</td><td>{val(r.itemProduct)||'—'}</td><td>{val(r.dateRetired)||'—'}</td></tr>)}</tbody></table></div>{importRows.length>8&&<p className="muted">Showing first 8 records for preview.</p>}</div>}
+          <div className="branch-form-actions"><button className="ghost-btn" type="button" onClick={()=>setShowImport(false)}>Cancel</button><button className="amber-btn" type="button" disabled={!importRows.length||importing} onClick={importRetirements}>{importing?'Importing...':`Import ${importRows.length||''} Records`}</button></div>
+        </div>
+      </div>
+    </div>}
+
     {modalOpen && <div className="retirement-modal-backdrop no-print" onMouseDown={e=>{if(e.target===e.currentTarget){closeModal()}}}>
       <div className="retirement-modal" role="dialog" aria-modal="true" aria-labelledby="retirement-modal-title">
         <div className="retirement-modal-header"><div><span className="eyebrow">ASSET MANAGEMENT</span><h2 id="retirement-modal-title">{editing?'Edit Retirement Record':'Add Retirement Record'}</h2><p className="muted">All fields are stored in Firebase. Branch names are available to all authorized groups.</p></div><button type="button" className="modal-close" aria-label="Close" onClick={closeModal}>×</button></div>

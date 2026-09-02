@@ -182,6 +182,43 @@ export default function Branches(){
     }catch(e){setImportError(e.message||'Hindi ma-import ang branches.')}finally{setImporting(false)}
   };
 
+  const exportBranches=async()=>{
+    const rows=filtered.map(b=>({
+      'BRANCH NAME':b.branchName||'',
+      'BRANCH TYPE':b.branchType||'',
+      'COMPANY':b.company||'',
+      'ACCOUNT NO.':b.accountNo||'',
+      'TEL. NO.':b.telNo||'',
+      'CONTACT PERSON':b.contactPerson||'',
+      'CONTACT NO.':b.contactNo||'',
+      'ADDRESS':b.address||'',
+      'OIC':b.oic||'',
+      'CONTACT NO._1':b.contactNo1||'',
+      'ISP':b.isp||'',
+      'CONN_TYPE':b.connType||'',
+      'PLAN':b.plan||'',
+      'MONTHLY PAYMENT':b.monthlyPayment??'',
+      'IP ADDRESS':b.ipAddress||'',
+      'SUBNET MASK':b.subnetMask||'',
+      'DEFAULT GATEWAY':b.defaultGateway||'',
+      'DNS1':b.dns1||'',
+      'DNS2':b.dns2||'',
+      'NO. OF COMP.':b.noOfComp??'',
+      '2175/2175II':b.printer2175||'',
+      'LX-310II':b.lx310ii||'',
+      'COLORED':b.colored||'',
+      'GROUP':b.groupName||''
+    }));
+    if(!rows.length){setError('Walang branch records na maaaring i-export.');return;}
+    const ws=XLSX.utils.json_to_sheet(rows);
+    ws['!cols']=Object.keys(rows[0]).map(k=>({wch:Math.min(Math.max(k.length+2,14),30)}));
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Branches');
+    const stamp=new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb,`EDP_Branches_${stamp}.xlsx`);
+    try{await audit({action:'EXPORT_BRANCHES',details:`Exported ${rows.length} branch records to Excel`})}catch(e){console.warn('Audit export failed',e)}
+  };
+
   const clearFilters=()=>{setSearch('');setTypeFilter('ALL');setCompanyFilter('ALL');setConnFilter('ALL')};
   const activeFilters=Boolean(search||typeFilter!=='ALL'||companyFilter!=='ALL'||connFilter!=='ALL');
 
@@ -195,7 +232,7 @@ export default function Branches(){
   return <section>
     <div className="page-title-row branch-page-heading">
       <div><p className="eyebrow">SUPER ADMINISTRATION</p><h1>Branch Management</h1><p className="subtext">Centralized branch, contact, connectivity, and equipment records.</p></div>
-      <div className="page-actions"><button className="ghost-btn" type="button" onClick={()=>{setImportRows([]);setImportFile(null);setImportError('');setShowImport(true)}}>⇧ Import Branches</button><button className="amber-btn" type="button" onClick={openAdd}>+ Add Branch</button></div>
+      <div className="page-actions"><button className="ghost-btn" type="button" onClick={exportBranches}>⇩ Export Excel</button><button className="ghost-btn" type="button" onClick={()=>{setImportRows([]);setImportFile(null);setImportError('');setShowImport(true)}}>⇧ Import Branches</button><button className="amber-btn" type="button" onClick={openAdd}>+ Add Branch</button></div>
     </div>
 
     {error&&!showModal&&!showImport&&<p className="error branch-page-error">{error}</p>}
