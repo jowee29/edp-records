@@ -777,3 +777,6 @@ body.modal-open{overflow:hidden}
   margin: 10px 0 0;
   font-weight: 700;
 }
+
+/* Audit Logs pagination */
+.audit-logs-pagination{}
