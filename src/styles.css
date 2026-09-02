@@ -360,6 +360,16 @@ table{border-radius:10px;overflow:hidden}
 @media(max-width:600px){.premium-hero{padding:22px 19px;display:block}.premium-hero h1{font-size:25px}.welcome-line{flex-wrap:wrap}.hero-meta{flex-direction:column;gap:7px}.hero-profile{margin-top:19px}.premium-actions{grid-template-columns:1fr}.distribution{grid-template-columns:1fr}.distribution-total{border-right:0;border-bottom:1px solid #293234;padding-bottom:14px;min-height:auto}.premium-side{display:block}.premium-side .activity-card{margin-top:12px}.premium-stats-grid{grid-template-columns:repeat(2,1fr)}.stat-foot{display:block}.stat-trend{display:block;margin-top:3px}.premium-stat{min-height:104px}}
 
 /* Retirement Records */
+body.modal-open{overflow:hidden}
+.retirement-modal-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.68);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.retirement-modal{width:min(760px,100%);max-height:calc(100vh - 40px);overflow:auto;background:#151b1d;border:1px solid #3a4447;border-radius:10px;box-shadow:0 25px 80px rgba(0,0,0,.55)}
+.retirement-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:18px 18px 12px;border-bottom:1px solid #293235;position:sticky;top:0;background:#151b1d;z-index:2}
+.retirement-modal-header h2{margin:0;color:#e9edee;font-size:18px}
+.retirement-modal-header p{margin:5px 0 0;font-size:10px}
+.modal-close{flex:0 0 auto;width:34px;height:34px;border:1px solid #394346;border-radius:6px;background:#20282b;color:#cbd2d3;font-size:22px;line-height:1}
+.modal-close:hover{color:#f5a623;border-color:#f5a623}
+.retirement-modal .retirement-form{margin:0;padding:16px}
+
 .retirement-form{padding:14px;margin-bottom:10px}
 .retirement-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .retirement-grid .field{display:flex;flex-direction:column;gap:4px}
@@ -397,3 +407,14 @@ table{border-radius:10px;overflow:hidden}
   .page-number{flex:1}
   .branch-list-note{display:none}
 }
+
+
+/* Change Password */
+.change-password-card{margin-top:12px;padding:14px}
+.change-password-card .panel-heading{margin-bottom:12px}
+.password-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end}
+.password-form label{display:flex;flex-direction:column;gap:5px;color:#8b979a;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.password-form input{margin-top:0}
+.password-form button{height:34px}
+.password-form .success,.password-form .error{grid-column:1/-1;margin:0}
+@media(max-width:800px){.password-form{grid-template-columns:1fr}.password-form .success,.password-form .error{grid-column:auto}}
