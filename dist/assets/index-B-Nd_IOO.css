@@ -332,11 +332,3 @@ html[data-theme="pink"] .letter-accomplishment-paper{
   background:#fff!important;
   color:#111!important;
 }
-
-/* Pink Mode — Branch Name + Branch Type */
-html[data-theme="pink"] .branch-name-cell b,
-html[data-theme="pink"] .branch-details-header h2,
-html[data-theme="pink"] .details-title-row h2{color:#4a0b26!important}
-html[data-theme="pink"] .branch-type-badge,
-html[data-theme="pink"] .branch-type-badge.full,
-html[data-theme="pink"] .branch-type-badge.sales-office{background:#d92f78!important;color:#fff!important;border-color:#d92f78!important}

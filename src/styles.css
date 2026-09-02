@@ -1128,16 +1128,83 @@ html[data-theme="pink"] .letter-accomplishment-paper{
   color:#111!important;
 }
 
-/* Pink Mode — Branch Name + Branch Type */
-html[data-theme="pink"] .branch-name-cell b,
-html[data-theme="pink"] .branch-details-header h2,
-html[data-theme="pink"] .details-title-row h2{
-  color:#4a0b26!important;
+/* =========================================================
+   PINK MODE — PREMIUM EXECUTIVE DASHBOARD
+   Replace the remaining premium dashboard dark surfaces.
+   ========================================================= */
+html[data-theme="pink"] .premium-hero{
+  background:linear-gradient(135deg,#ffd6e7 0%,#ffeaf3 55%,#ffc9df 100%)!important;
+  border-color:#f39abd!important;
+  box-shadow:0 18px 45px rgba(180,35,100,.12)!important;
 }
-html[data-theme="pink"] .branch-type-badge,
-html[data-theme="pink"] .branch-type-badge.full,
-html[data-theme="pink"] .branch-type-badge.sales-office{
-  background:#d92f78!important;
-  color:#fff!important;
-  border-color:#d92f78!important;
+html[data-theme="pink"] .premium-hero:before{
+  background:linear-gradient(90deg,transparent 55%,#ec4f9112),repeating-linear-gradient(90deg,transparent 0 70px,#ffffff22 71px 72px)!important;
 }
+html[data-theme="pink"] .premium-hero h1{color:#7a1743!important}
+html[data-theme="pink"] .premium-hero p{color:#9b5573!important}
+html[data-theme="pink"] .hero-meta{color:#a45d79!important}
+html[data-theme="pink"] .hero-meta i{background:#d92f78!important;box-shadow:0 0 0 4px #d92f7820!important}
+html[data-theme="pink"] .secure-badge{
+  color:#8f1648!important;background:#ffd6e8!important;border-color:#ec8db3!important
+}
+html[data-theme="pink"] .hero-profile{
+  background:#fff0f6e8!important;border-color:#e98caf!important;backdrop-filter:blur(8px)
+}
+html[data-theme="pink"] .hero-profile-avatar{background:#ec4f91!important;color:#fff!important}
+html[data-theme="pink"] .hero-profile small{color:#a45d79!important}
+html[data-theme="pink"] .hero-profile strong{color:#6b123b!important}
+html[data-theme="pink"] .hero-profile span{color:#d92f78!important}
+
+html[data-theme="pink"] .premium-actions .action-card,
+html[data-theme="pink"] .premium-actions .action-accent{
+  background:#ffe1ee!important;border-color:#f39abd!important;color:#5a1030!important;
+}
+html[data-theme="pink"] .premium-actions .action-card:hover,
+html[data-theme="pink"] .premium-actions .action-accent:hover{
+  background:#ffd4e5!important;border-color:#ec4f91!important
+}
+html[data-theme="pink"] .premium-actions .action-card strong{color:#7a1743!important}
+html[data-theme="pink"] .premium-actions .action-card p{color:#a45d79!important}
+html[data-theme="pink"] .premium-actions .action-arrow{color:#d92f78!important}
+html[data-theme="pink"] .premium-actions .action-icon,
+html[data-theme="pink"] .premium-actions .action-accent .action-icon{
+  background:#ffc6dc!important;color:#a21d59!important;border-color:#f09abc!important
+}
+
+html[data-theme="pink"] .overview-card{
+  background:#ffe1ee!important;border-color:#f39abd!important;color:#5a1030!important;
+}
+html[data-theme="pink"] .overview-card h2{color:#7a1743!important}
+html[data-theme="pink"] .overview-card .section-heading>div>span{color:#d92f78!important}
+html[data-theme="pink"] .distribution-total{border-color:#efb0cb!important}
+html[data-theme="pink"] .distribution-total strong{color:#6b123b!important}
+html[data-theme="pink"] .distribution-total span{color:#a45d79!important}
+html[data-theme="pink"] .bar-row{color:#9b5573!important}
+html[data-theme="pink"] .bar-row>div{background:#f4b9cf!important}
+html[data-theme="pink"] .bar-row i{background:linear-gradient(90deg,#c7286d,#ec4f91)!important}
+html[data-theme="pink"] .bar-row b{color:#7a1743!important}
+
+html[data-theme="pink"] .premium-system{
+  background:#ffe1ee!important;border-color:#f39abd!important;color:#5a1030!important;
+}
+html[data-theme="pink"] .premium-system h2{color:#7a1743!important}
+html[data-theme="pink"] .premium-system .health-item{border-color:#efb0cb!important}
+html[data-theme="pink"] .premium-system .health-item span{color:#9b5573!important}
+html[data-theme="pink"] .premium-system .health-item b{color:#d92f78!important}
+html[data-theme="pink"] .premium-system .health-score{border-color:#efb0cb!important}
+html[data-theme="pink"] .premium-system .health-score strong{color:#6b123b!important}
+html[data-theme="pink"] .premium-system .health-score span{color:#a45d79!important}
+html[data-theme="pink"] .premium-system .score-ring{border-color:#ec8db3!important;color:#d92f78!important}
+
+html[data-theme="pink"] .activity-card{
+  background:#ffe1ee!important;border-color:#f39abd!important;color:#5a1030!important;
+}
+html[data-theme="pink"] .activity-card h2{color:#7a1743!important}
+html[data-theme="pink"] .activity-card .section-heading>a{color:#d92f78!important}
+html[data-theme="pink"] .activity-row{border-color:#efb0cb!important}
+html[data-theme="pink"] .activity-dot{background:#ffc6dc!important;color:#a21d59!important}
+html[data-theme="pink"] .activity-row strong{color:#7a1743!important}
+html[data-theme="pink"] .activity-row p{color:#a45d79!important}
+html[data-theme="pink"] .activity-row small{color:#ad6682!important}
+html[data-theme="pink"] .empty-activity{color:#a45d79!important}
+html[data-theme="pink"] .section-note{color:#a45d79!important}
