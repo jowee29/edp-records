@@ -608,7 +608,7 @@ body.modal-open{overflow:hidden}
   }
 }
 
-/* Accomplishment History: use the exact same Letter form design as Add Accomplishment */
+/* Accomplishment: use the exact same Letter form design as Add Accomplishment */
 .accomplishment-view-modal{display:flex!important;flex-direction:column;max-height:92vh!important;overflow:hidden!important}
 .accomplishment-view-modal .modal-body{flex:1 1 auto;min-height:0;overflow:auto!important;padding:18px!important;background:#eef0f1}
 .history-print-paper{min-width:fit-content}
@@ -630,7 +630,7 @@ body.modal-open{overflow:hidden}
   .accomplishment-view-modal .modal-head,.accomplishment-view-modal .modal-footer{display:none!important}
 }
 
-/* Accomplishment History pagination */
+/* Accomplishment pagination */
 .history-pagination{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;padding:12px 14px;background:#151b1d;border:1px solid #2b3437;border-radius:8px}
 .history-page-info{font-size:11px;color:#8f999c}
 .history-page-info b{color:#e5eaea}
@@ -641,3 +641,132 @@ body.modal-open{overflow:hidden}
 .history-pagination .small-btn{min-height:32px;padding:0 11px}
 .history-pagination button:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:700px){.history-pagination{align-items:stretch;flex-direction:column}.history-page-controls{justify-content:center}.history-page-info{text-align:center}.history-page-btn{min-width:30px}}
+
+/* Accomplishment consolidated page */
+.accomplishment-add-modal{width:min(1100px,96vw)!important;max-height:94vh!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.accomplishment-add-body{overflow:auto!important;min-height:0!important;padding:18px!important;background:#eef0f1!important}
+.accomplishment-add-body .letter-accomplishment-paper{margin:0 auto!important}
+.accomplishment-add-body .embedded-hide{display:none!important}
+@media(max-width:700px){.accomplishment-add-modal{width:98vw!important}.accomplishment-add-body{padding:8px!important}}
+
+/* Accomplishment Add Modal - slightly larger and more comfortable */
+.accomplishment-add-modal{
+  width:min(1240px,97vw)!important;
+  max-width:1240px!important;
+  max-height:96vh!important;
+  border-radius:12px!important;
+}
+.accomplishment-add-modal .modal-head{padding:16px 22px!important}
+.accomplishment-add-body{
+  padding:18px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+@media(max-width:700px){
+  .accomplishment-add-modal{width:99vw!important;max-height:97vh!important}
+  .accomplishment-add-body{padding:10px!important}
+}
+
+/* Add Accomplishment modal - black text for Clear and Print buttons */
+.accomplishment-add-modal .paper-save-actions .outline-btn{
+  color:#000!important;
+  -webkit-text-fill-color:#000!important;
+}
+.accomplishment-add-modal .paper-save-actions .outline-btn:hover{
+  color:#000!important;
+  -webkit-text-fill-color:#000!important;
+}
+@media print{
+  .accomplishment-add-modal .paper-save-actions .outline-btn{
+    color:#000!important;
+    -webkit-text-fill-color:#000!important;
+  }
+}
+
+/* PRINT FIX: keep the Add Accomplishment form header and entire Letter form visible. */
+@media print {
+  body:has(.accomplishment-add-modal) .modal-backdrop.no-print {
+    display: flex !important;
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    background: #fff !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  body:has(.accomplishment-add-modal) .accomplishment-add-modal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+  body:has(.accomplishment-add-modal) .accomplishment-add-modal .modal-head,
+  body:has(.accomplishment-add-modal) .accomplishment-add-modal .accomplishment-add-body {
+    display: block !important;
+  }
+  body:has(.accomplishment-add-modal) .accomplishment-add-modal .modal-head {
+    display: none !important;
+  }
+  body:has(.accomplishment-add-modal) .accomplishment-add-body {
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  body:has(.accomplishment-add-modal) .accomplishment-add-body .letter-accomplishment-paper {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    width: 8.5in !important;
+    height: 11in !important;
+    min-height: 11in !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+  body:has(.accomplishment-add-modal) .accomplishment-add-body .letter-accomplishment-paper,
+  body:has(.accomplishment-add-modal) .accomplishment-add-body .letter-accomplishment-paper * {
+    visibility: visible !important;
+  }
+  body:has(.accomplishment-add-modal) .accomplishment-add-body .paper-save-actions {
+    display: none !important;
+  }
+}
+
+/* Print: Letter paper with 0.5 inch top margin */
+@media print {
+  @page {
+    size: Letter portrait;
+    margin-top: 0.5in !important;
+  }
+}
+
+
+/* Print: Letter paper with 0.75 inch bottom margin */
+@media print {
+  @page {
+    size: Letter portrait;
+    margin-bottom: 0.75in !important;
+  }
+}
+
+/* Findings / Consumables: Arial Black */
+.letter-accomplishment-paper .lav-findings,
+.letter-accomplishment-paper .lav-consumables {
+  font-family: "Arial Black", Arial, Helvetica, sans-serif !important;
+  font-weight: 900 !important;
+}
+@media print {
+  .letter-accomplishment-paper .lav-findings,
+  .letter-accomplishment-paper .lav-consumables {
+    font-family: "Arial Black", Arial, Helvetica, sans-serif !important;
+    font-weight: 900 !important;
+  }
+}

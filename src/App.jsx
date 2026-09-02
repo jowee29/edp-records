@@ -49,8 +49,7 @@ function Layout({children}){
     ...(role==='super_admin' ? [{to:'/users',label:'User Management',icon:'users'}] : []),
     ...(role==='admin'||role==='employee'||role==='super_admin' ? [
       {to:'/branches',label:'Branches',icon:'branch'},
-      {to:'/accomplishment',label:'Add Accomplishment',icon:'form'},
-      {to:'/accomplishment-history',label:'Accomplishment History',icon:'history'},
+      {to:'/accomplishment',label:'Accomplishment',icon:'history'},
       {to:'/retirement',label:'Retirement',icon:'retirement'}
     ] : []),
     ...(role==='super_admin' ? [
@@ -102,8 +101,7 @@ export default function App(){
     <Route path="/users" element={<Protected roles={['super_admin']}><Layout><Users/></Layout></Protected>}/>
     <Route path="/branches" element={<Protected roles={['admin','employee','super_admin']}><Layout><Branches/></Layout></Protected>}/>
     <Route path="/groups" element={<Protected roles={['super_admin']}><Layout><Groups/></Layout></Protected>}/>
-    <Route path="/accomplishment" element={<Protected roles={['admin','employee','super_admin']}><Layout><Accomplishment/></Layout></Protected>}/>
-    <Route path="/accomplishment-history" element={<Protected roles={['admin','employee','super_admin']}><Layout><AccomplishmentHistory/></Layout></Protected>}/>
+    <Route path="/accomplishment" element={<Protected roles={['admin','employee','super_admin']}><Layout><AccomplishmentHistory/></Layout></Protected>}/>
     <Route path="/retirement" element={<Protected roles={['admin','employee','super_admin']}><Layout><Retirement/></Layout></Protected>}/>
     <Route path="/audit-logs" element={<Protected roles={['super_admin']}><Layout><AuditLogs/></Layout></Protected>}/>
     <Route path="/profile" element={<Protected><Layout><Profile/></Layout></Protected>}/>
