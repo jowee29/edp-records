@@ -6,3 +6,321 @@
 /* Add Accomplishment final visual cleanup */
 .letter-accomplishment-paper,.letter-accomplishment-paper *{font-family:"Courier New",Courier,monospace!important}.letter-accomplishment-paper{background:#fff!important;color:#111!important}.lav-header-fields input,.lav-header-fields select{border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;background:#fff!important;color:#111!important}.lav-sign input,.lav-sign select{border:0!important;outline:0!important;box-shadow:none!important;border-radius:0!important;background:#fff!important;color:#111!important}.lav-personnel-premium input{background:#fff!important;color:#111!important}@media print{.letter-accomplishment-paper,.letter-accomplishment-paper *{font-family:"Courier New",Courier,monospace!important}.letter-accomplishment-paper,.premium-accomplishment-header,.lav-personnel-premium,.lav-section,.lav-section textarea,.lav-sign input,.lav-sign select,.lav-header-fields.print-only div{background:#fff!important;color:#111!important}.lav-header-fields.print-only div{border:0!important;padding-left:0!important;padding-right:0!important}.lav-sign input,.lav-sign select{border:0!important}}
 .letter-accomplishment-paper .lav-section textarea,.letter-accomplishment-paper textarea.lav-findings,.letter-accomplishment-paper textarea.lav-consumables{background:#fff!important;color:#111!important;-webkit-text-fill-color:#111!important;font-family:"Courier New",Courier,monospace!important}
+.theme-pink input,.theme-pink select,.theme-pink textarea{background:#fffafb;border-color:#f3bfd2;color:#422532}
+.theme-pink input:focus,.theme-pink select:focus,.theme-pink textarea:focus{border-color:#ec4f91;box-shadow:0 0 0 2px #ec4f9125}
+.theme-pink .outline-btn,.theme-pink .ghost-btn{border-color:#f0bfd2;color:#8e4f6a;background:#fff}
+.theme-pink .outline-btn:hover,.theme-pink .ghost-btn:hover{border-color:#ec4f91;color:#d72d78;background:#fff5fa}
+.theme-pink .amber-btn{background:#ec4f91;border-color:#ec4f91;color:#fff}
+.theme-pink .amber-btn:hover{background:#d92f78;border-color:#d92f78}
+.theme-pink .small-btn,.theme-pink .history-page-btn{background:#fff0f6;border-color:#f3bfd2;color:#8e4f6a}
+.theme-pink .history-page-btn.active{background:#ec4f91;border-color:#ec4f91;color:#fff}
+.theme-pink .history-pagination{background:#fff;border-color:#ffd7e5}
+.theme-pink .history-page-info{color:#9c6b7e}
+.theme-pink .history-page-info b{color:#4a2735}
+.theme-pink table{color:#422532}
+.theme-pink th{background:#fff0f6!important;color:#8e4f6a!important;border-color:#ffd7e5!important}
+.theme-pink td{border-color:#f5d6e2!important}
+.theme-pink tr:hover td{background:#fff8fb!important}
+.theme-pink .modal-backdrop{background:rgba(69,25,45,.42)!important}
+.theme-pink .modal-head,.theme-pink .modal-footer{background:#fff5fa;border-color:#ffd7e5}
+.theme-pink .file-picker{background:#fff8fb;border-color:#efb5cc;color:#8e4f6a}
+.theme-pink .file-picker:hover{border-color:#ec4f91;color:#d72d78}
+.theme-pink .import-help{background:#fff8fb;border-color:#ffd7e5}
+.theme-pink .import-help-title{color:#d72d78}
+.theme-pink .details-actions,.theme-pink .paper-save-actions{background:#fff0f6;border-color:#ffd7e5}
+.theme-pink .avatar,.theme-pink .mobile-avatar{background:#ec4f91!important;color:#fff!important}
+.theme-pink .logout-link{color:#b34d76}
+.theme-pink .logout-link:hover{color:#d72d78}
+.theme-pink .mobile-topbar{background:#fff;border-color:#ffd7e5}
+
+/* Pink theme for the dashboard's commonly used fixed dark surfaces. */
+.theme-pink .stat,.theme-pink .stat-box,.theme-pink .metric-card,.theme-pink .activity-card,
+.theme-pink .chart-card,.theme-pink .recent-card,.theme-pink .branch-stat-card,
+.theme-pink .branch-list,.theme-pink .toolbar,.theme-pink .filters,
+.theme-pink .accomplishment-add-body,.theme-pink .accomplishment-view-modal .modal-body{
+  background:#fff!important;color:#351c28;border-color:#ffd7e5!important;
+}
+.theme-pink .branch-stat-card strong,.theme-pink .metric-card strong{color:#351c28}
+.theme-pink .branch-stat-card span,.theme-pink .metric-card span{color:#a96a82}
+.theme-pink .status-active{color:#d72d78!important}
+
+/* Preserve the Letter printable form exactly as a white paper document. */
+.theme-pink .letter-accomplishment-paper,
+.theme-pink .letter-accomplishment-paper *{color:inherit}
+.theme-pink .letter-accomplishment-paper{background:#fff!important;color:#111!important}
+
+@media(max-width:900px){
+  .theme-switcher{margin-bottom:12px}
+}
+
+/* =========================================================
+   PINK MODE — DARK PINK + LIGHT PINK ONLY
+   ========================================================= */
+html[data-theme="pink"] body,
+html[data-theme="pink"] .app-shell.theme-pink,
+html[data-theme="pink"] .main-shell,
+html[data-theme="pink"] .page-container{background:#fff0f6!important;color:#5a1030!important}
+
+html[data-theme="pink"] .sidebar{
+  background:linear-gradient(180deg,#8f1648 0%,#b91f63 55%,#8f1648 100%)!important;
+  border-right:1px solid #d83b7a!important;
+}
+html[data-theme="pink"] .sidebar-brand strong,
+html[data-theme="pink"] .sidebar-brand span,
+html[data-theme="pink"] .sidebar-label,
+html[data-theme="pink"] .side-link,
+html[data-theme="pink"] .logout-link,
+html[data-theme="pink"] .sidebar-user .user-copy strong,
+html[data-theme="pink"] .sidebar-user .user-copy span{color:#fff!important}
+html[data-theme="pink"] .side-link:hover,
+html[data-theme="pink"] .logout-link:hover{background:#d92f78!important;color:#fff!important}
+html[data-theme="pink"] .side-link.active{
+  background:#f35b9e!important;color:#fff!important;border-color:#ff8cba!important;
+  box-shadow:inset 4px 0 0 #fff!important;
+}
+html[data-theme="pink"] .sidebar-bottom{border-top-color:#d83b7a!important}
+html[data-theme="pink"] .theme-switcher{background:#8a1647!important;border-color:#ee5c9c!important}
+html[data-theme="pink"] .theme-btn{color:#ffd2e4!important}
+html[data-theme="pink"] .theme-btn:hover{background:#c9286d!important;color:#fff!important}
+html[data-theme="pink"] .theme-btn.active{background:#ff6ba8!important;color:#fff!important;border-color:#ff8cba!important}
+
+html[data-theme="pink"] .mobile-topbar,
+html[data-theme="pink"] .topbar{background:#a81858!important;border-color:#d83b7a!important}
+html[data-theme="pink"] .page-title-row h1,
+html[data-theme="pink"] .hero-row h1,
+html[data-theme="pink"] h1,html[data-theme="pink"] h2,html[data-theme="pink"] h3,
+html[data-theme="pink"] .subtext,html[data-theme="pink"] .eyebrow{color:#7a1743!important}
+
+html[data-theme="pink"] .card,
+html[data-theme="pink"] .panel,
+html[data-theme="pink"] .table-card,
+html[data-theme="pink"] .stat-card,
+html[data-theme="pink"] .dashboard-card,
+html[data-theme="pink"] .content-card,
+html[data-theme="pink"] .modal,
+html[data-theme="pink"] .modal-card,
+html[data-theme="pink"] .stat,
+html[data-theme="pink"] .stat-box,
+html[data-theme="pink"] .metric-card,
+html[data-theme="pink"] .activity-card,
+html[data-theme="pink"] .chart-card,
+html[data-theme="pink"] .recent-card,
+html[data-theme="pink"] .branch-stat-card,
+html[data-theme="pink"] .branch-list,
+html[data-theme="pink"] .toolbar,
+html[data-theme="pink"] .filters{
+  background:#ffe1ee!important;color:#5a1030!important;border-color:#f39abd!important;
+}
+html[data-theme="pink"] input,
+html[data-theme="pink"] select,
+html[data-theme="pink"] textarea{
+  background:#fff0f6!important;color:#5a1030!important;border-color:#e98caf!important;
+}
+html[data-theme="pink"] input::placeholder{color:#a95778!important}
+html[data-theme="pink"] input:focus,
+html[data-theme="pink"] select:focus,
+html[data-theme="pink"] textarea:focus{border-color:#d92f78!important;box-shadow:0 0 0 2px #d92f7825!important}
+html[data-theme="pink"] select option{background:#fff0f6!important;color:#5a1030!important}
+
+html[data-theme="pink"] .amber-btn,
+html[data-theme="pink"] .role-chip,
+html[data-theme="pink"] .auth-card button:not(.outline-btn){
+  background:#d92f78!important;border-color:#d92f78!important;color:#fff!important;
+}
+html[data-theme="pink"] .amber-btn:hover{background:#b91f63!important;border-color:#b91f63!important}
+html[data-theme="pink"] .outline-btn,
+html[data-theme="pink"] .ghost-btn,
+html[data-theme="pink"] .small-btn,
+html[data-theme="pink"] .history-page-btn{
+  background:#ffd6e8!important;border-color:#e98caf!important;color:#7a1743!important;
+}
+html[data-theme="pink"] .outline-btn:hover,
+html[data-theme="pink"] .ghost-btn:hover{background:#f8a8ca!important;border-color:#d92f78!important;color:#6b123b!important}
+html[data-theme="pink"] .history-page-btn.active{background:#d92f78!important;border-color:#d92f78!important;color:#fff!important}
+
+html[data-theme="pink"] th{background:#f8b2d0!important;color:#6b123b!important;border-color:#e98caf!important}
+html[data-theme="pink"] td{border-color:#efb0cb!important;color:#6b123b!important}
+html[data-theme="pink"] tbody tr:nth-child(even),
+html[data-theme="pink"] tbody tr:hover td{background:#ffdceb!important}
+html[data-theme="pink"] .name-cell b,
+html[data-theme="pink"] .metric-card strong,
+html[data-theme="pink"] .branch-stat-card strong{color:#6b123b!important}
+html[data-theme="pink"] .name-cell small,
+html[data-theme="pink"] .metric-card span,
+html[data-theme="pink"] .branch-stat-card span,
+html[data-theme="pink"] .count-label,
+html[data-theme="pink"] .muted{color:#a95778!important}
+html[data-theme="pink"] .role-tag,
+html[data-theme="pink"] .table-avatar{background:#f7a8c9!important;color:#6b123b!important;border-color:#e98caf!important}
+html[data-theme="pink"] .role-tag.super_admin{background:#d92f78!important;color:#fff!important}
+html[data-theme="pink"] .link-btn{color:#a21d59!important}
+html[data-theme="pink"] .link-btn:hover{color:#d92f78!important}
+html[data-theme="pink"] .error{background:#ffdce9!important;color:#9b1d55!important;border-color:#e98caf!important}
+html[data-theme="pink"] .success{background:#ffdce9!important;color:#8f1648!important;border-color:#e98caf!important}
+html[data-theme="pink"] .modal-backdrop{background:rgba(91,8,45,.68)!important}
+html[data-theme="pink"] .modal-head,
+html[data-theme="pink"] .modal-footer,
+html[data-theme="pink"] .details-actions,
+html[data-theme="pink"] .paper-save-actions{background:#ffcfe3!important;border-color:#e98caf!important}
+html[data-theme="pink"] .file-picker,
+html[data-theme="pink"] .import-help{background:#ffe1ee!important;border-color:#e98caf!important;color:#6b123b!important}
+html[data-theme="pink"] .import-help-title{color:#d92f78!important}
+html[data-theme="pink"] .avatar,
+html[data-theme="pink"] .mobile-avatar{background:#d92f78!important;color:#fff!important}
+html[data-theme="pink"] .logout-link{color:#fff!important}
+html[data-theme="pink"] .history-pagination{background:#ffe1ee!important;border-color:#e98caf!important}
+html[data-theme="pink"] .history-page-info{color:#a95778!important}
+html[data-theme="pink"] .history-page-info b{color:#6b123b!important}
+
+/* Keep printable accomplishment paper white even in Pink Mode. */
+html[data-theme="pink"] .letter-accomplishment-paper,
+html[data-theme="pink"] .letter-accomplishment-paper *{color:inherit}
+html[data-theme="pink"] .letter-accomplishment-paper{background:#fff!important;color:#111!important}
+
+
+/* =========================================================
+   PINK MODE — REMOVE REMAINING DARK/BLACK SURFACES
+   Every fixed dark surface in the app should switch with Pink Mode.
+   ========================================================= */
+html[data-theme="pink"] .dark-card,
+html[data-theme="pink"] .branch-modal,
+html[data-theme="pink"] .retirement-modal,
+html[data-theme="pink"] .retirement-modal-header,
+html[data-theme="pink"] .accomplishment-toolbar,
+html[data-theme="pink"] .history-search,
+html[data-theme="pink"] .action-card,
+html[data-theme="pink"] .system-card,
+html[data-theme="pink"] .profile-summary,
+html[data-theme="pink"] .branch-pagination,
+html[data-theme="pink"] .retirement-pagination,
+html[data-theme="pink"] .history-pagination{
+  background:#ffe1ee!important;
+  color:#5a1030!important;
+  border-color:#f39abd!important;
+}
+
+html[data-theme="pink"] .modal-header,
+html[data-theme="pink"] .modal-body .branch-form-actions{
+  background:#ffcfe3!important;
+  color:#5a1030!important;
+  border-color:#e98caf!important;
+}
+
+html[data-theme="pink"] .modal-close,
+html[data-theme="pink"] .retirement-modal .modal-close,
+html[data-theme="pink"] .retirement-page-btn{
+  background:#ffd6e8!important;
+  color:#7a1743!important;
+  border-color:#e98caf!important;
+}
+
+html[data-theme="pink"] .retirement-page-btn:hover:not(:disabled){
+  background:#f8a8ca!important;
+  color:#6b123b!important;
+  border-color:#d92f78!important;
+}
+
+html[data-theme="pink"] .hero-role,
+html[data-theme="pink"] .hero-role.super,
+html[data-theme="pink"] .stat-icon,
+html[data-theme="pink"] .action-icon,
+html[data-theme="pink"] .online-badge,
+html[data-theme="pink"] .secure-badge,
+html[data-theme="pink"] .retired-pill{
+  background:#ffd6e8!important;
+  color:#7a1743!important;
+  border-color:#e98caf!important;
+}
+
+html[data-theme="pink"] .section-heading>span{
+  background:#f7a8c9!important;
+  color:#7a1743!important;
+}
+
+html[data-theme="pink"] .premium-stat:after{
+  background:#ec4f9120!important;
+}
+
+html[data-theme="pink"] .table-avatar,
+html[data-theme="pink"] .avatar,
+html[data-theme="pink"] .mobile-avatar{
+  background:#d92f78!important;
+  color:#fff!important;
+  border-color:#ec4f91!important;
+}
+
+/* Forms/auth/loading/error screens must also lose dark backgrounds. */
+html[data-theme="pink"] .auth-page,
+html[data-theme="pink"] .screen-message{
+  background:#fff0f6!important;
+  color:#5a1030!important;
+}
+
+html[data-theme="pink"] .auth-card{
+  background:#ffe1ee!important;
+  border-color:#f39abd!important;
+  color:#5a1030!important;
+}
+
+html[data-theme="pink"] .auth-card h1,
+html[data-theme="pink"] .screen-message h2{
+  color:#6b123b!important;
+}
+
+html[data-theme="pink"] .theme-switcher{
+  background:#8a1647!important;
+}
+
+/* Inputs had a global !important dark background; Pink must win. */
+html[data-theme="pink"] input,
+html[data-theme="pink"] select,
+html[data-theme="pink"] textarea{
+  background:#fff0f6!important;
+  color:#5a1030!important;
+}
+
+/* Generic dark button/surface classes used by individual pages. */
+html[data-theme="pink"] .ghost-btn,
+html[data-theme="pink"] .small-btn,
+html[data-theme="pink"] .history-page-btn,
+html[data-theme="pink"] .link-btn{
+  background-color:#ffd6e8!important;
+  color:#7a1743!important;
+}
+
+html[data-theme="pink"] .link-btn{
+  background:transparent!important;
+}
+
+html[data-theme="pink"] .branch-form-panel,
+html[data-theme="pink"] .form-panel,
+html[data-theme="pink"] .profile-card{
+  background:#ffe1ee!important;
+  color:#5a1030!important;
+  border-color:#f39abd!important;
+}
+
+/* Catch common dark page wrappers without affecting printable paper. */
+html[data-theme="pink"] .main-shell,
+html[data-theme="pink"] .page-container,
+html[data-theme="pink"] .mobile-topbar,
+html[data-theme="pink"] .sidebar{
+  color:#5a1030!important;
+}
+
+html[data-theme="pink"] .letter-accomplishment-paper,
+html[data-theme="pink"] .letter-accomplishment-paper *{
+  background-color:initial;
+}
+html[data-theme="pink"] .letter-accomplishment-paper{
+  background:#fff!important;
+  color:#111!important;
+}
+
+/* Pink Mode — Branch Name + Branch Type */
+html[data-theme="pink"] .branch-name-cell b,
+html[data-theme="pink"] .branch-details-header h2,
+html[data-theme="pink"] .details-title-row h2{color:#4a0b26!important}
+html[data-theme="pink"] .branch-type-badge,
+html[data-theme="pink"] .branch-type-badge.full,
+html[data-theme="pink"] .branch-type-badge.sales-office{background:#d92f78!important;color:#fff!important;border-color:#d92f78!important}

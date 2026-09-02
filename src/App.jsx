@@ -1,5 +1,6 @@
 import edpLogo from './assets/edp-logo.png';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useAuth, audit } from './auth';
 import { Login, ForgotPassword } from './pages/Auth';
 import Dashboard from './pages/Dashboard';
@@ -41,6 +42,11 @@ const Icon=({name})=>{
 function Layout({children}){
   const {profile,logout}=useAuth();
   const navigate=useNavigate();
+  const [theme,setTheme]=useState(()=>localStorage.getItem('edp-theme')||'dark');
+  useEffect(()=>{
+    localStorage.setItem('edp-theme',theme);
+    document.documentElement.setAttribute('data-theme',theme);
+  },[theme]);
   const nav=async()=>{await audit({action:'LOGOUT',details:'User logged out'});await logout();navigate('/login')};
   const role=profile?.role||'employee';
   const roleLabel=role.replace('_',' ').toUpperCase();
@@ -57,11 +63,15 @@ function Layout({children}){
       {to:'/audit-logs',label:'Audit Logs',icon:'audit'}
     ] : [])
   ];
-  return <div className="app-shell">
+  return <div className={`app-shell theme-${theme}`}>
     <aside className="sidebar">
       <div className="sidebar-brand">
         <img src={edpLogo} alt="EDP"/>
         <div><strong>EDP Records</strong><span>MANAGEMENT SYSTEM</span></div>
+      </div>
+      <div className="theme-switcher">
+        <button className={`theme-btn ${theme==='dark'?'active':''}`} onClick={()=>setTheme('dark')} title="Dark Mode">☾ <span>Dark</span></button>
+        <button className={`theme-btn ${theme==='pink'?'active':''}`} onClick={()=>setTheme('pink')} title="Pink Mode">♡ <span>Pink</span></button>
       </div>
       <div className="sidebar-section">
         <span className="sidebar-label">MAIN MENU</span>

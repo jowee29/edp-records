@@ -1,3 +1,27 @@
 <!doctype html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>EDP Records</title>  <script type="module" crossorigin src="/assets/index-DYXJUHjl.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-LEHxZ5Hg.css">
-</head><body><div id="root"></div></body></html>
+</head><body><div id="root"></div>
+<script>
+(function(){
+  var saved=localStorage.getItem('edp-theme')||'dark';
+  document.documentElement.setAttribute('data-theme',saved);
+  function mount(){
+    if(document.getElementById('edp-theme-switcher')) return;
+    var box=document.createElement('div'); box.id='edp-theme-switcher'; box.className='edp-theme-switcher';
+    box.innerHTML='<button data-theme="dark">☾ <span>Dark</span></button><button data-theme="pink">♡ <span>Pink</span></button>';
+    document.body.appendChild(box);
+    box.querySelectorAll('button').forEach(function(btn){btn.onclick=function(){
+      var t=btn.getAttribute('data-theme'); localStorage.setItem('edp-theme',t); document.documentElement.setAttribute('data-theme',t); apply();
+    }});
+    apply();
+  }
+  function apply(){
+    var t=document.documentElement.getAttribute('data-theme')||'dark';
+    document.querySelectorAll('.app-shell').forEach(function(el){el.classList.toggle('theme-pink',t==='pink');el.classList.toggle('theme-dark',t==='dark');});
+    var box=document.getElementById('edp-theme-switcher'); if(box) box.querySelectorAll('button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-theme')===t)});
+  }
+  new MutationObserver(function(){mount();apply()}).observe(document.documentElement,{childList:true,subtree:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',mount); else mount();
+})();
+</script>
+</body></html>
