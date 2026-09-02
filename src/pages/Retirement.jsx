@@ -58,7 +58,7 @@ export default function Retirement(){
   useEffect(()=>{setPage(1)},[search]);
 
   return <>
-    <div className="page-title-row"><div><span className="eyebrow">ASSET MANAGEMENT</span><h1>Retirement</h1><p>Record and monitor retired assets for all authorized branch users.</p></div><div className="page-actions no-print"><button className="amber-btn" onClick={()=>{reset();setModalOpen(true);document.body.classList.add('modal-open')}}>＋ Add Retirement Record</button><button className="outline-btn" onClick={reset}>Clear</button><button className="amber-btn" onClick={()=>window.print()}>🖨 Print</button></div></div>
+    <div className="page-title-row"><div><span className="eyebrow">ASSET MANAGEMENT</span><h1>Retirement</h1><p>Record and monitor retired assets for all authorized branch users.</p></div><div className="page-actions no-print"><button className="amber-btn" onClick={()=>{reset();setModalOpen(true);document.body.classList.add('modal-open')}}>＋ Add Retirement Record</button></div></div>
     {error&&<div className="error no-print">{error}</div>}
     {saved&&<div className="success no-print">Retirement record saved successfully.</div>}
     {modalOpen && <div className="retirement-modal-backdrop no-print" onMouseDown={e=>{if(e.target===e.currentTarget){closeModal()}}}>
@@ -83,9 +83,34 @@ export default function Retirement(){
 
     <div className="toolbar-row no-print"><div className="search-wrap"><span>⌕</span><input placeholder="Search branch, asset code, serial no., product..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} record{filtered.length===1?'':'s'}</span></div>
     <div className="content-card table-wrap retirement-table">
-      <table><thead><tr><th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th><th>ACTION</th></tr></thead>
-      <tbody>{loading?<tr><td colSpan="10" className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}><td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td><div className="actions">{profile.role==='super_admin'&&<><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></>}</div></td></tr>):<tr><td colSpan="10" className="empty-state">No retirement records found.</td></tr>}</tbody></table>
-      {!loading&&filtered.length>0&&<div className="table-pagination no-print"><span>Showing {(safePage-1)*PAGE_SIZE+1}–{Math.min(safePage*PAGE_SIZE,filtered.length)} of {filtered.length}</span><div><button className="ghost-btn" disabled={safePage===1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Previous</button><b> Page {safePage} of {totalPages} </b><button className="ghost-btn" disabled={safePage===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Next</button></div></div>}
+      <table><thead><tr>{profile.role==='super_admin'&&<th>ACTION</th>}<th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th></tr></thead>
+      <tbody>{loading?<tr><td colSpan={profile.role==='super_admin'?10:9} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}>{profile.role==='super_admin'&&<td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td>}<td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td></tr>):<tr><td colSpan={profile.role==='super_admin'?10:9} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
+      {!loading&&filtered.length>0&&(()=>{
+        const pages=[];
+        const addPage=p=>pages.push(p);
+        if(totalPages<=7){
+          for(let p=1;p<=totalPages;p++) addPage(p);
+        }else{
+          addPage(1);
+          if(safePage>4) pages.push('ellipsis-start');
+          const start=Math.max(2,safePage-1);
+          const end=Math.min(totalPages-1,safePage+1);
+          for(let p=start;p<=end;p++) addPage(p);
+          if(safePage<totalPages-3) pages.push('ellipsis-end');
+          addPage(totalPages);
+        }
+        return <div className="retirement-pagination no-print" aria-label="Retirement table pagination">
+          <span className="retirement-pagination-info">Showing <b>{(safePage-1)*PAGE_SIZE+1}–{Math.min(safePage*PAGE_SIZE,filtered.length)}</b> of <b>{filtered.length}</b></span>
+          <div className="retirement-pagination-controls">
+            <button type="button" className="retirement-page-btn arrow" disabled={safePage===1} onClick={()=>setPage(p=>Math.max(1,p-1))} aria-label="Previous page">‹</button>
+            {pages.map((p,i)=>p.toString().startsWith('ellipsis')?
+              <span key={p+i} className="retirement-page-ellipsis">…</span>:
+              <button type="button" key={p} className={`retirement-page-btn${safePage===p?' active':''}`} aria-current={safePage===p?'page':undefined} onClick={()=>setPage(p)}>{p}</button>
+            )}
+            <button type="button" className="retirement-page-btn arrow" disabled={safePage===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))} aria-label="Next page">›</button>
+          </div>
+        </div>;
+      })()}
     </div>
   </>;
 }

@@ -418,3 +418,20 @@ body.modal-open{overflow:hidden}
 .password-form button{height:34px}
 .password-form .success,.password-form .error{grid-column:1/-1;margin:0}
 @media(max-width:800px){.password-form{grid-template-columns:1fr}.password-form .success,.password-form .error{grid-column:auto}}
+
+.retirement-pagination{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;background:#151b1d;border-top:1px solid #252e31}
+.retirement-pagination-info{color:#6f7b7f;font-size:10px;white-space:nowrap}
+.retirement-pagination-info b{color:#aeb8bb;font-weight:800}
+.retirement-pagination-controls{display:flex;align-items:center;gap:4px}
+.retirement-page-btn{min-width:30px;height:30px;padding:0 8px;border:1px solid #2d383b;border-radius:5px;background:#111719;color:#9da8ab;font-size:10px;font-weight:800;line-height:28px;text-align:center}
+.retirement-page-btn:hover:not(:disabled){border-color:#f5a623;color:#f5b33e;background:#1a2022}
+.retirement-page-btn.active{border-color:#f5a623;background:#f5a623;color:#151819}
+.retirement-page-btn.arrow{font-size:18px;font-weight:500;line-height:24px}
+.retirement-page-btn:disabled{opacity:.35;cursor:not-allowed}
+.retirement-page-ellipsis{width:24px;text-align:center;color:#657175;font-size:12px}
+@media(max-width:620px){
+  .retirement-pagination{align-items:stretch;flex-direction:column;gap:9px;padding:11px 10px}
+  .retirement-pagination-info{text-align:center}
+  .retirement-pagination-controls{justify-content:center}
+  .retirement-page-btn{min-width:28px;height:28px;line-height:26px}
+}
