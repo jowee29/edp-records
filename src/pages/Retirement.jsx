@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
 import { audit, useAuth } from '../auth';
 
@@ -74,16 +74,12 @@ export default function Retirement(){
     }catch(e){setError(e.message)}finally{setSaving(false)}
   };
   const edit=x=>{setEditing(x.id);setForm({...blank,...x});window.scrollTo({top:0,behavior:'smooth'})};
-  const remove=x=>setConfirm({type:'delete',item:x});
 
   const approve=async r=>{
     setSaving(true);setError('');
     try{
       const item=r.requestedData||{};
-      if(r.action==='delete'){
-        await deleteDoc(doc(db,'retirements',r.retirementId));
-        await audit({action:'APPROVE_DELETE_RETIREMENT',details:`Approved and deleted retirement requested by ${r.requestedByName}`,targetUserId:r.retirementId});
-      } else {
+      if(r.action==='delete'){ continue; } else {
         await updateDoc(doc(db,'retirements',r.retirementId),{...item,updatedAt:serverTimestamp(),approvedBy:profile.uid,approvedAt:serverTimestamp()});
         await audit({action:'APPROVE_UPDATE_RETIREMENT',details:`Approved retirement edit requested by ${r.requestedByName}`,targetUserId:r.retirementId});
       }
@@ -112,7 +108,7 @@ export default function Retirement(){
 
     {profile.role==='super_admin'&&<div className="content-card no-print" style={{marginBottom:16}}>
       <div className="panel-heading"><div><h2>🔔 Retirement Approval Requests {requests.length>0&&<span className="retired-pill">{requests.length} pending</span>}</h2><span className="muted">Admin and Employee changes cannot affect retirement records until you approve them.</span></div></div>
-      {requests.length===0?<div className="empty-state">No pending retirement approval requests.</div>:<div className="approval-list">{requests.map(r=><div className="approval-item" key={r.id}><div><b>{r.action==='delete'?'Delete':'Edit'} Retirement</b><div>{r.requestedByName} ({roleName(r.requestedByRole)}) · {r.requestedData?.assetCode||r.requestedData?.itemProduct||r.retirementId}</div><small>{r.requestedData?.branchName||'—'}</small></div><div className="actions"><button className="link-btn" disabled={saving} onClick={()=>setConfirm({type:'approve',request:r})}>Approve</button><button className="link-btn danger-link" disabled={saving} onClick={()=>setConfirm({type:'reject',request:r})}>Reject</button></div></div>)}</div>}
+      {requests.length===0?<div className="empty-state">No pending retirement approval requests.</div>:<div className="approval-list">{requests.map(r=><div className="approval-item" key={r.id}><div><b>Edit Retirement</b><div>{r.requestedByName} ({roleName(r.requestedByRole)}) · {r.requestedData?.assetCode||r.requestedData?.itemProduct||r.retirementId}</div><small>{r.requestedData?.branchName||'—'}</small></div><div className="actions"><button className="link-btn" disabled={saving} onClick={()=>setConfirm({type:'approve',request:r})}>Approve</button><button className="link-btn danger-link" disabled={saving} onClick={()=>setConfirm({type:'reject',request:r})}>Reject</button></div></div>)}</div>}
     </div>}
 
     <form className="content-card retirement-form no-print" onSubmit={save}>
@@ -134,10 +130,10 @@ export default function Retirement(){
     <div className="toolbar-row no-print"><div className="search-wrap"><span>⌕</span><input placeholder="Search branch, asset code, serial no., product..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} record{filtered.length===1?'':'s'}</span></div>
     <div className="content-card table-wrap retirement-table">
       <table><thead><tr><th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th><th>ACTION</th></tr></thead>
-      <tbody>{loading?<tr><td colSpan="10" className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}><td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td></tr>):<tr><td colSpan="10" className="empty-state">No retirement records found.</td></tr>}</tbody></table>
+      <tbody>{loading?<tr><td colSpan="10" className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}><td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button></div></td></tr>):<tr><td colSpan="10" className="empty-state">No retirement records found.</td></tr>}</tbody></table>
       {!loading&&filtered.length>0&&<div className="table-pagination no-print"><span>Showing {(safePage-1)*PAGE_SIZE+1}–{Math.min(safePage*PAGE_SIZE,filtered.length)} of {filtered.length}</span><div><button className="ghost-btn" disabled={safePage===1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Previous</button><b> Page {safePage} of {totalPages} </b><button className="ghost-btn" disabled={safePage===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Next</button></div></div>}
     </div>
 
-    {confirm&&<div className="branch-modal" role="dialog" aria-modal="true"><div className="content-card" style={{maxWidth:520,margin:'10vh auto'}}><h2>{confirm.type==='approve'?'Confirm approval':confirm.type==='reject'?'Reject approval request?':'Confirm retirement action'}</h2><p>{confirm.type==='approve'?`Allow ${confirm.request.requestedByName} (${roleName(confirm.request.requestedByRole)}) to ${confirm.request.action==='delete'?'DELETE':'EDIT'} retirement ${confirm.request.requestedData?.assetCode||confirm.request.requestedData?.itemProduct||confirm.request.retirementId}? This confirmation will apply the requested change.`:confirm.type==='reject'?`Reject ${confirm.request.action==='delete'?'deletion':'edit'} request from ${confirm.request.requestedByName}?`:`${confirm.type==='delete'?'Request permission to delete':'Proceed with this retirement action'} for ${confirm.item?.assetCode||confirm.item?.itemProduct||'this record'}? ${profile.role==='super_admin'?'This action will be final after your confirmation.':'A notification will be sent to Super Admin and the record will not be changed until approval.'}`}</p><div className="retirement-actions"><button className="outline-btn" onClick={()=>setConfirm(null)}>Cancel</button>{confirm.type==='approve'?<button className="amber-btn" disabled={saving} onClick={()=>approve(confirm.request)}>{saving?'Processing...':'Yes, Approve'}</button>:confirm.type==='reject'?<button className="danger-btn" disabled={saving} onClick={()=>reject(confirm.request)}>{saving?'Processing...':'Reject'}</button>:<button className="amber-btn" disabled={saving} onClick={async()=>{const x=confirm.item;setConfirm(null);setSaving(true);setError('');try{if(profile.role==='super_admin'){await deleteDoc(doc(db,'retirements',x.id));await audit({action:'DELETE_RETIREMENT',details:`Deleted retirement record for ${x.assetCode||x.itemProduct}`,targetUserId:x.id});await load()}else{await requestApproval('delete',x,x.id);setSaved(true)}}catch(e){setError(e.message)}finally{setSaving(false)}}}>{profile.role==='super_admin'?'Yes, Delete':'Send Delete Request'}</button>}</div></div></div>}
+    {confirm&&<div className="branch-modal" role="dialog" aria-modal="true"><div className="content-card" style={{maxWidth:520,margin:'10vh auto'}}><h2>{confirm.type==='approve'?'Confirm approval':'Reject approval request?'}</h2><p>{confirm.type==='approve'?`Allow ${confirm.request.requestedByName} (${roleName(confirm.request.requestedByRole)}) to EDIT retirement ${confirm.request.requestedData?.assetCode||confirm.request.requestedData?.itemProduct||confirm.request.retirementId}? This confirmation will apply the requested change.`:`Reject edit request from ${confirm.request.requestedByName}?`}</p><div className="retirement-actions"><button className="outline-btn" onClick={()=>setConfirm(null)}>Cancel</button>{confirm.type==='approve'?<button className="amber-btn" disabled={saving} onClick={()=>approve(confirm.request)}>{saving?'Processing...':'Yes, Approve'}</button>:<button className="danger-btn" disabled={saving} onClick={()=>reject(confirm.request)}>{saving?'Processing...':'Reject'}</button>}</div></div></div>}
   </>;
 }
