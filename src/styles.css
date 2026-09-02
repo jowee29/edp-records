@@ -770,3 +770,10 @@ body.modal-open{overflow:hidden}
     font-weight: 900 !important;
   }
 }
+
+
+/* Session expired message */
+.auth-card .error {
+  margin: 10px 0 0;
+  font-weight: 700;
+}
