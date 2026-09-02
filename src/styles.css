@@ -607,3 +607,37 @@ body.modal-open{overflow:hidden}
     font-size: 10px !important;
   }
 }
+
+/* Accomplishment History: use the exact same Letter form design as Add Accomplishment */
+.accomplishment-view-modal{display:flex!important;flex-direction:column;max-height:92vh!important;overflow:hidden!important}
+.accomplishment-view-modal .modal-body{flex:1 1 auto;min-height:0;overflow:auto!important;padding:18px!important;background:#eef0f1}
+.history-print-paper{min-width:fit-content}
+.history-letter-paper{margin:0 auto!important;box-shadow:0 8px 28px rgba(0,0,0,.12)!important}
+.history-letter-paper .history-value{min-height:24px;padding:2px 4px;border-bottom:1px solid #777;font-size:10px;font-weight:700}
+.history-letter-paper .history-textarea{display:block;width:100%;box-sizing:border-box;background:#fff;color:#111;white-space:pre-wrap;overflow-wrap:anywhere;padding:7px 8px;font:10px "Courier New",Courier,monospace;line-height:1.45}
+.history-letter-paper .history-sign-value{min-height:18px;text-align:center;font-size:9px;font-weight:700;margin:5px auto 0;width:90%;padding:3px}
+.history-print-fields{grid-template-columns:140px 260px!important;gap:12px!important}
+.history-print-fields span{font-size:7px!important}
+.history-print-fields b{font-size:11px!important}
+@media(max-width:700px){.accomplishment-view-modal{width:96vw!important;max-height:94vh!important}.accomplishment-view-modal .modal-body{padding:10px!important}.history-letter-paper{transform-origin:top left}}
+@media print{
+  body *{visibility:hidden!important}
+  .accomplishment-view-modal,.accomplishment-view-modal *{visibility:visible!important}
+  .accomplishment-view-modal{position:static!important;width:100%!important;max-height:none!important;display:block!important;background:#fff!important;box-shadow:none!important;overflow:visible!important}
+  .accomplishment-view-modal .modal-body{overflow:visible!important;padding:0!important;background:#fff!important}
+  .history-print-paper{overflow:visible!important}
+  .history-letter-paper{width:8.5in!important;height:11in!important;min-height:11in!important;margin:0!important;border:0!important;box-shadow:none!important;overflow:hidden!important}
+  .accomplishment-view-modal .modal-head,.accomplishment-view-modal .modal-footer{display:none!important}
+}
+
+/* Accomplishment History pagination */
+.history-pagination{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;padding:12px 14px;background:#151b1d;border:1px solid #2b3437;border-radius:8px}
+.history-page-info{font-size:11px;color:#8f999c}
+.history-page-info b{color:#e5eaea}
+.history-page-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.history-page-btn{min-width:32px;height:32px;padding:0 9px;border:1px solid #394447;background:#1c2426;color:#cfd6d8;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer}
+.history-page-btn:hover{border-color:#d6a72c;color:#fff}
+.history-page-btn.active{background:#d6a72c;border-color:#d6a72c;color:#111}
+.history-pagination .small-btn{min-height:32px;padding:0 11px}
+.history-pagination button:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:700px){.history-pagination{align-items:stretch;flex-direction:column}.history-page-controls{justify-content:center}.history-page-info{text-align:center}.history-page-btn{min-width:30px}}
