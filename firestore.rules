@@ -52,6 +52,17 @@ service cloud.firestore {
       allow read, create, update, delete: if isSuperAdmin();
     }
 
+
+    match /activeSessions/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.sessionId is string
+        && request.resource.data.sessionId.size() >= 16
+        && request.resource.data.sessionId.size() <= 128;
+      allow delete: if false;
+    }
+
     match /auditLogs/{logId} {
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow read: if isSuperAdmin();
