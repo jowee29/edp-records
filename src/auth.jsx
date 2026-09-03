@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, getDocFromServer, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 const AuthContext = createContext(null);
@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let timer;
     let stopSessionListener = () => {};
+    let stopSessionPolling = () => {};
     let signingOutForAnotherDevice = false;
 
     const resetInactivityTimer = () => {
@@ -46,6 +47,8 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async u => {
       stopSessionListener();
       stopSessionListener = () => {};
+      stopSessionPolling();
+      stopSessionPolling = () => {};
       signingOutForAnotherDevice = false;
       setUser(u);
 
@@ -89,6 +92,25 @@ export function AuthProvider({ children }) {
           try { await signOut(auth); } catch {}
         });
 
+        // Firestore realtime listeners are normally immediate, but browsers can
+        // throttle background tabs/connections. Poll the server as a second
+        // enforcement path so the old device is logged out without requiring refresh.
+        let polling = false;
+        const pollSession = async () => {
+          if (!auth.currentUser || signingOutForAnotherDevice || polling) return;
+          polling = true;
+          try {
+            await enforceSession(await getDocFromServer(sessionRef));
+          } catch {
+            // Keep the realtime listener alive; transient network failures should
+            // not log the user out.
+          } finally {
+            polling = false;
+          }
+        };
+        const pollTimer = window.setInterval(() => { void pollSession(); }, 1500);
+        stopSessionPolling = () => window.clearInterval(pollTimer);
+
         // Also verify when the tab becomes active again. This catches cases where
         // a browser throttles background realtime callbacks.
         const verifyOnFocus = async () => {
@@ -114,6 +136,7 @@ export function AuthProvider({ children }) {
     return () => {
       unsubscribe();
       stopSessionListener();
+      stopSessionPolling();
       clearTimeout(timer);
       activityEvents.forEach(event => window.removeEventListener(event, resetInactivityTimer));
     };
