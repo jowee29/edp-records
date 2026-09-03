@@ -31,78 +31,9 @@ const detailSections = [
   {title:'EQUIPMENT', fields:[['NO. OF COMP.','noOfComp'],['2175/2175II','printer2175'],['LX-310II','lx310ii'],['COLORED','colored']]},
 ];
 
-// Normalize Excel headers so exports from this app and common external templates
-// map to the same Firestore field names. This also handles punctuation, spacing,
-// underscores, hyphens, and common long-form header names.
-const normalizeHeader = value => String(value ?? '')
-  .trim()
-  .toUpperCase()
-  .replace(/[._\-\/]+/g,' ')
-  .replace(/\s+/g,' ')
-  .trim();
-
+const normalizeHeader = value => String(value ?? '').trim().toUpperCase().replace(/[._\-\s]+/g,' ').replace(/\s+/g,' ');
 const headerMap = {
-  'BRANCH NAME':'branchName',
-  'BRANCH':'branchName',
-  'BRANCH TYPE':'branchType',
-  'TYPE':'branchType',
-  'COMPANY':'company',
-  'ACCOUNT NO':'accountNo',
-  'ACCOUNT NUMBER':'accountNo',
-  'ACCOUNT #':'accountNo',
-  'ACCOUNT':'accountNo',
-  'TEL NO':'telNo',
-  'TELEPHONE NO':'telNo',
-  'TELEPHONE NUMBER':'telNo',
-  'PHONE NO':'telNo',
-  'PHONE NUMBER':'telNo',
-  'CONTACT PERSON':'contactPerson',
-  'CONTACT NAME':'contactPerson',
-  'CONTACT NO':'contactNo',
-  'CONTACT NUMBER':'contactNo',
-  'CONTACT PHONE':'contactNo',
-  'ADDRESS':'address',
-  'OIC':'oic',
-  'CONTACT NO 1':'contactNo1',
-  'CONTACT NUMBER 1':'contactNo1',
-  'OIC CONTACT NO':'contactNo1',
-  'ISP':'isp',
-  'INTERNET SERVICE PROVIDER':'isp',
-  'CONN TYPE':'connType',
-  'CONNECTION TYPE':'connType',
-  'CONNECTION':'connType',
-  'PLAN':'plan',
-  'MBPS':'plan',
-  'MONTHLY PAYMENT':'monthlyPayment',
-  'MONTHLY FEE':'monthlyPayment',
-  'MONTHLY BILL':'monthlyPayment',
-  'IP ADDRESS':'ipAddress',
-  'IP':'ipAddress',
-  'SUBNET MASK':'subnetMask',
-  'SUBNET':'subnetMask',
-  'DEFAULT GATEWAY':'defaultGateway',
-  'GATEWAY':'defaultGateway',
-  'DNS1':'dns1',
-  'DNS 1':'dns1',
-  'PRIMARY DNS':'dns1',
-  'DNS2':'dns2',
-  'DNS 2':'dns2',
-  'SECONDARY DNS':'dns2',
-  'NO OF COMP':'noOfComp',
-  'NUMBER OF COMPUTERS':'noOfComp',
-  'NO OF COMPUTERS':'noOfComp',
-  'COMPUTERS':'noOfComp',
-  '2175 2175II':'printer2175',
-  '2175 2175 II':'printer2175',
-  'PRINTER 2175':'printer2175',
-  'PRINTER 2175II':'printer2175',
-  'LX 310II':'lx310ii',
-  'LX 310 II':'lx310ii',
-  'LX310II':'lx310ii',
-  'LX 310':'lx310ii',
-  'COLORED':'colored',
-  'COLOR':'colored',
-  'COLOUR':'colored'
+  'BRANCH NAME':'branchName','BRANCH TYPE':'branchType','COMPANY':'company','ACCOUNT NO':'accountNo','TEL NO':'telNo','CONTACT PERSON':'contactPerson','CONTACT NO':'contactNo','ADDRESS':'address','OIC':'oic','CONTACT NO 1':'contactNo1','ISP':'isp','CONN TYPE':'connType','PLAN':'plan','MONTHLY PAYMENT':'monthlyPayment','IP ADDRESS':'ipAddress','SUBNET MASK':'subnetMask','DEFAULT GATEWAY':'defaultGateway','DNS1':'dns1','DNS 1':'dns1','DNS2':'dns2','DNS 2':'dns2','NO OF COMP':'noOfComp','2175/2175II':'printer2175','LX 310II':'lx310ii','LX 310 II':'lx310ii','COLORED':'colored'
 };
 
 export default function Branches(){
@@ -208,15 +139,9 @@ export default function Branches(){
 
   const toImportRow=row=>{
     const out={...blank};
-    Object.entries(row).forEach(([key,value])=>{
-      const mapped=headerMap[normalizeHeader(key)];
-      if(!mapped)return;
-      // Import displayed Excel text (rather than JS numeric coercion) so account
-      // numbers, telephone numbers, IPs, etc. are not accidentally changed.
-      out[mapped]=value==null?'':String(value).trim();
-    });
+    Object.entries(row).forEach(([key,value])=>{const mapped=headerMap[normalizeHeader(key)];if(mapped)out[mapped]=value==null?'':String(value).trim()});
     if(!out.connType)out.connType='Static';
-    out.branchType=String(out.branchType||'').trim().toUpperCase();
+    out.branchType=String(out.branchType||'').toUpperCase();
     out.monthlyPayment=out.monthlyPayment?Number(String(out.monthlyPayment).replace(/[^0-9.-]/g,''))||0:0;
     out.noOfComp=out.noOfComp?Number(String(out.noOfComp).replace(/[^0-9.-]/g,''))||0:0;
     return out;
@@ -229,7 +154,7 @@ export default function Branches(){
       const data=await file.arrayBuffer();
       const workbook=XLSX.read(data,{type:'array'});
       const sheet=workbook.Sheets[workbook.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(sheet,{defval:'',raw:false,blankrows:false});
+      const rows=XLSX.utils.sheet_to_json(sheet,{defval:''});
       const mapped=rows.map(toImportRow).filter(r=>Object.values(r).some(v=>String(v??'').trim()!==''));
       if(!mapped.length)throw new Error('Walang valid rows sa Excel/CSV file.');
       const invalid=mapped.findIndex(r=>!r.branchName||!['FULL','SALES OFFICE'].includes(r.branchType));

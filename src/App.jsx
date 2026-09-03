@@ -12,6 +12,8 @@ import Accomplishment from './pages/Accomplishment';
 import AccomplishmentHistory from './pages/AccomplishmentHistory';
 import Groups from './pages/Groups';
 import Retirement from './pages/Retirement';
+import PartsInventory from './pages/PartsInventory';
+import UsedParts from './pages/UsedParts';
 
 function Protected({children,roles}){
   const {user,profile,loading}=useAuth();
@@ -34,6 +36,8 @@ const Icon=({name})=>{
     audit:<><path d="M12 3l8 4v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V7l8-4Z"/><path d="M9 12l2 2 4-4"/></>,
     profile:<><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
     retirement:<><path d="M7 3h10v4H7z"/><path d="M5 7h14v14H5z"/><path d="M8 11h8M8 15h6"/></>,
+    inventory:<><path d="M3 7h18v14H3z"/><path d="M7 7V4h10v3"/><path d="M3 12h18M9 12v3h6v-3"/></>,
+    used:<><path d="M4 7h16v13H4z"/><path d="M8 7V4h8v3M8 11h8M8 15h5"/></>,
     logout:<><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/></>
   };
   return <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>
@@ -59,6 +63,8 @@ function Layout({children}){
       {to:'/retirement',label:'Retirement',icon:'retirement'}
     ] : []),
     ...(role==='super_admin' ? [
+      {to:'/parts-inventory',label:'Parts Inventory',icon:'inventory'},
+      {to:'/used-parts',label:'Used Parts',icon:'used'},
       {to:'/groups',label:'Groups',icon:'groups'},
       {to:'/audit-logs',label:'Audit Logs',icon:'audit'}
     ] : [])
@@ -113,6 +119,8 @@ export default function App(){
     <Route path="/groups" element={<Protected roles={['super_admin']}><Layout><Groups/></Layout></Protected>}/>
     <Route path="/accomplishment" element={<Protected roles={['admin','employee','super_admin']}><Layout><AccomplishmentHistory/></Layout></Protected>}/>
     <Route path="/retirement" element={<Protected roles={['admin','employee','super_admin']}><Layout><Retirement/></Layout></Protected>}/>
+    <Route path="/parts-inventory" element={<Protected roles={['super_admin']}><Layout><PartsInventory/></Layout></Protected>}/>
+    <Route path="/used-parts" element={<Protected roles={['super_admin']}><Layout><UsedParts/></Layout></Protected>}/>
     <Route path="/audit-logs" element={<Protected roles={['super_admin']}><Layout><AuditLogs/></Layout></Protected>}/>
     <Route path="/profile" element={<Protected><Layout><Profile/></Layout></Protected>}/>
     <Route path="*" element={<Navigate to={user?'/dashboard':'/login'} replace/>}/>

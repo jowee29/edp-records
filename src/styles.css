@@ -1208,3 +1208,158 @@ html[data-theme="pink"] .activity-row p{color:#a45d79!important}
 html[data-theme="pink"] .activity-row small{color:#ad6682!important}
 html[data-theme="pink"] .empty-activity{color:#a45d79!important}
 html[data-theme="pink"] .section-note{color:#a45d79!important}
+
+.parts-page-heading{margin-bottom:18px}.parts-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.parts-stat-card{background:#151b1d;border:1px solid #293437;border-radius:8px;padding:14px 15px;min-height:88px}.parts-stat-card span{display:block;color:#718084;font-size:9px;font-weight:900;letter-spacing:.1em}.parts-stat-card strong{display:block;color:#edf1f2;font-size:23px;line-height:1.1;margin-top:8px}.parts-stat-card small{display:block;color:#7b878a;font-size:9px;margin-top:4px}.parts-toolbar{padding:10px;display:flex;align-items:center;gap:8px;margin-bottom:13px}.parts-toolbar .search-wrap{min-width:280px}.parts-toolbar select{width:150px;height:38px;background:#111719}.parts-table table{min-width:1050px}.parts-table th{height:38px;padding:9px 10px}.parts-table td{padding:12px 10px;vertical-align:middle}.parts-branch-badge{display:inline-flex;padding:5px 8px;border-radius:4px;background:#202b2e;color:#f5b33e;font-size:8px;font-weight:900;letter-spacing:.05em;white-space:nowrap}.parts-number{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#cbd2d3;font-size:10px}.parts-table .action-col{width:125px}.action-cell{white-space:nowrap}.table-action{border:1px solid #303b3e;background:#171e20;color:#b9c2c4;border-radius:4px;padding:6px 8px;font-size:9px;font-weight:800;margin-right:5px}.table-action.edit:hover{color:#f5b33e;border-color:#765722}.table-action.danger:hover{color:#e68c8c;border-color:#703b3b}.parts-editor-modal{width:min(760px,100%)}.parts-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.parts-form-grid label{color:#7f8b8f;font-size:9px;font-weight:800;letter-spacing:.05em}.parts-form-grid input,.parts-form-grid select{margin-top:5px}.parts-form-grid input,.parts-form-grid select{width:100%;height:38px;padding:8px 10px;border:1px solid #303a3d;border-radius:5px;background:#13191b;color:#dce2e3;outline:none;font-size:11px}.parts-form-grid input:focus,.parts-form-grid select:focus{border-color:#b47b22;box-shadow:0 0 0 2px #f5a62318}@media(max-width:760px){.parts-stat-grid{grid-template-columns:repeat(2,1fr)}.parts-toolbar{flex-direction:column;align-items:stretch}.parts-toolbar .search-wrap{min-width:0}.parts-toolbar select{width:100%}.parts-form-grid{grid-template-columns:1fr}}
+.used-parts-table table{min-width:0;width:100%;table-layout:auto}.used-parts-table td{vertical-align:middle}.used-status{display:inline-flex;padding:5px 8px;border-radius:4px;font-size:8px;font-weight:900;letter-spacing:.05em;white-space:nowrap}.used-status.dr{background:#3a2525;color:#e99a9a;border:1px solid #6a3b3b}.used-status.not-dr{background:#25352b;color:#9ad0a8;border:1px solid #3b6247}.used-notes{max-width:220px;white-space:normal;line-height:1.4;color:#9da7aa}.used-parts-modal{width:min(820px,100%)}.full-field{grid-column:1/-1}.parts-form-grid textarea{margin-top:5px;width:100%;padding:8px 10px;border:1px solid #303a3d;border-radius:5px;background:#13191b;color:#dce2e3;outline:none;font-size:11px;resize:vertical}.parts-form-grid textarea:focus{border-color:#b47b22;box-shadow:0 0 0 2px #f5a62318}
+.used-parts-table tbody tr.clickable-row{cursor:pointer;transition:background .15s ease}
+.used-parts-table tbody tr.clickable-row:hover{background:rgba(245,158,11,.07)}
+.used-parts-view-modal{max-width:1200px;width:min(1200px,calc(100vw - 32px))}
+.view-details-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.view-details-grid>div{padding:13px 14px;border:1px solid var(--border,#e5e7eb);border-radius:10px;background:var(--surface-soft,#f8fafc)}
+.view-details-grid span:not(.used-status){display:block;font-size:11px;font-weight:700;letter-spacing:.06em;opacity:.68;margin-bottom:5px}
+.view-details-grid strong{display:block;font-size:14px;line-height:1.45;word-break:break-word}
+.view-details-grid .full-field{grid-column:1/-1}
+@media(max-width:700px){.view-details-grid{grid-template-columns:1fr}.view-details-grid .full-field{grid-column:auto}.used-parts-view-modal{width:calc(100vw - 24px)}}
+
+
+/* Parts Inventory & Used Parts modals — match Add Branch modal */
+.parts-editor-modal.branch-modal{
+  width:min(980px,100%);
+  max-height:calc(100vh - 48px);
+}
+.parts-editor-modal .modal-body{
+  overflow:auto;
+  padding:18px 20px;
+}
+.parts-editor-modal .parts-form-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.parts-editor-modal .parts-form-grid label{
+  color:#7f8b8f;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.05em;
+}
+.parts-editor-modal .parts-form-grid input,
+.parts-editor-modal .parts-form-grid select,
+.parts-editor-modal .parts-form-grid textarea{
+  box-sizing:border-box;
+  margin-top:5px;
+  width:100%;
+}
+.parts-editor-modal .modal-footer{
+  flex:0 0 auto;
+  background:#151b1d;
+  border-top:1px solid #293336;
+  padding:14px 20px;
+}
+.parts-editor-modal .modal-footer .amber-btn,
+.parts-editor-modal .modal-footer .ghost-btn{
+  min-width:100px;
+}
+.used-parts-view-modal .modal-body{
+  min-height:120px;
+}
+.used-parts-view-modal .view-details-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.used-parts-view-modal .view-details-grid>div{
+  min-height:54px;
+  padding:10px 11px;
+  background:#111719;
+  border:1px solid #273134;
+  border-radius:5px;
+}
+.used-parts-view-modal .view-details-grid>div.full-field{
+  grid-column:1/-1;
+}
+.used-parts-view-modal .view-details-grid span:first-child{
+  display:block;
+  color:#6f7b7f;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.08em;
+  margin-bottom:6px;
+}
+.used-parts-view-modal .view-details-grid strong{
+  display:block;
+  color:#e5eaeb;
+  font-size:12px;
+  font-weight:700;
+  word-break:break-word;
+}
+@media(max-width:850px){
+  .parts-editor-modal .parts-form-grid,
+  .used-parts-view-modal .view-details-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:620px){
+  .parts-editor-modal.branch-modal{
+    max-height:calc(100vh - 20px);
+  }
+  .parts-editor-modal .modal-header{
+    padding:15px;
+  }
+  .parts-editor-modal .modal-body{
+    padding:15px;
+  }
+  .parts-editor-modal .parts-form-grid,
+  .used-parts-view-modal .view-details-grid{
+    grid-template-columns:1fr;
+  }
+  .used-parts-view-modal .view-details-grid>div.full-field{
+    grid-column:auto;
+  }
+  .parts-editor-modal .modal-footer{
+    padding:12px 15px;
+  }
+  .parts-editor-modal .modal-footer button{
+    flex:1;
+  }
+}
+
+
+/* Used Parts: no horizontal scrollbar; Notes stays only inside Add/Edit/View details, not the table. */
+.used-parts-table{overflow-x:hidden!important}
+.used-parts-table table{min-width:0!important;width:100%!important}
+.used-parts-view-modal{width:min(1100px,calc(100vw - 40px));max-width:1100px;max-height:calc(100vh - 40px);}
+.used-parts-view-modal .modal-body{overflow:visible!important;max-height:none!important}
+@media(max-width:700px){.used-parts-view-modal{width:calc(100vw - 24px);max-width:none}.used-parts-table{overflow-x:hidden!important}}
+.bulk-used-parts-list{display:flex;flex-direction:column;gap:14px}.bulk-used-part-row{border:1px solid #303a3d;border-radius:8px;padding:12px;background:#111719}.bulk-row-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#dce2e3;font-size:11px;letter-spacing:.05em}.bulk-row-title .table-action{font-size:9px;padding:5px 8px}.bulk-add-row{align-self:flex-start}.used-parts-modal{width:min(1100px,calc(100vw - 40px));max-width:1100px}.used-parts-modal .modal-body{max-height:calc(100vh - 210px);overflow:auto}.bulk-used-part-row .parts-form-grid{margin-top:0}@media(max-width:700px){.used-parts-modal{width:calc(100vw - 24px)}.used-parts-modal .modal-body{max-height:calc(100vh - 180px)}}
+
+/* Used Parts grouped branch view */
+.used-parts-view-modal{width:min(1200px,calc(100vw - 32px));max-width:1200px}
+.used-parts-view-body{overflow:visible!important;max-height:none!important}.used-parts-view-body.is-scrollable{max-height:calc(100vh - 300px);overflow-y:auto!important;overflow-x:hidden!important}
+.view-branch-summary{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:12px;border:1px solid #303a3d;border-radius:7px;background:#111719;font-size:10px}
+.view-branch-summary span{color:#7f8a8d;font-weight:800;letter-spacing:.06em}
+.view-branch-summary strong{color:#e2e7e8;margin-right:18px}
+.used-parts-view-table-wrap{width:100%;overflow:visible!important}
+.used-parts-view-table{width:100%;border-collapse:collapse;table-layout:auto}
+.used-parts-view-table th{padding:8px 7px;text-align:left;font-size:14px;letter-spacing:.05em;color:#7f8a8d;border-bottom:1px solid #303a3d;white-space:nowrap}
+.used-parts-view-table td{padding:9px 7px;border-bottom:1px solid #252e30;font-size:14px;color:#cbd2d3;vertical-align:middle}
+.used-parts-view-table tbody tr:hover{background:rgba(245,158,11,.05)}
+.used-view-actions{display:flex;gap:5px;white-space:nowrap}
+.used-view-actions .table-action{font-size:8px;padding:5px 7px}
+@media(max-width:900px){.used-parts-view-modal{width:calc(100vw - 20px)}.used-parts-view-table{font-size:9px}.used-parts-view-table th,.used-parts-view-table td{padding:7px 5px;font-size:14px}.used-view-actions{flex-direction:column}}
+@media(max-width:700px){.used-parts-view-modal{width:calc(100vw - 12px)}.view-branch-summary{flex-wrap:wrap}.used-parts-view-table th,.used-parts-view-table td{padding:6px 4px;font-size:14px}.used-view-actions .table-action{font-size:7px;padding:4px 5px}}
+
+
+/* Used Parts View: clickable NOT DR status */
+.status-clickable{
+  border:0;
+  cursor:pointer;
+  font:inherit;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.status-clickable:hover{filter:brightness(.95);transform:translateY(-1px);}
+
+/* Used Parts View modal content font */
+.used-parts-view-modal .used-parts-view-table, .used-parts-view-modal .used-parts-view-table th, .used-parts-view-modal .used-parts-view-table td { font-size: 13px; }
+.used-parts-view-modal .used-parts-view-table th { font-size: 13px; }

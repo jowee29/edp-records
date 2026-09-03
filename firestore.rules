@@ -44,6 +44,14 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin();
     }
 
+    match /partsInventory/{itemId} {
+      allow read, create, update, delete: if isSuperAdmin();
+    }
+
+    match /usedParts/{usedPartId} {
+      allow read, create, update, delete: if isSuperAdmin();
+    }
+
     match /auditLogs/{logId} {
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow read: if isSuperAdmin();
