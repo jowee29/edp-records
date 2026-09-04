@@ -47,10 +47,20 @@ function Layout({children}){
   const {profile,logout}=useAuth();
   const navigate=useNavigate();
   const [theme,setTheme]=useState(()=>localStorage.getItem('edp-theme')||'dark');
+  const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
   useEffect(()=>{
     localStorage.setItem('edp-theme',theme);
     document.documentElement.setAttribute('data-theme',theme);
   },[theme]);
+  useEffect(()=>{
+    const close=()=>setMobileMenuOpen(false);
+    window.addEventListener('resize',close);
+    return()=>window.removeEventListener('resize',close);
+  },[]);
+  useEffect(()=>{
+    document.body.classList.toggle('mobile-menu-open',mobileMenuOpen);
+    return()=>document.body.classList.remove('mobile-menu-open');
+  },[mobileMenuOpen]);
   const nav=async()=>{await audit({action:'LOGOUT',details:'User logged out'});await logout();navigate('/login')};
   const role=profile?.role||'employee';
   const roleLabel=role.replace('_',' ').toUpperCase();
@@ -69,8 +79,9 @@ function Layout({children}){
       {to:'/audit-logs',label:'Audit Logs',icon:'audit'}
     ] : [])
   ];
-  return <div className={`app-shell theme-${theme}`}>
-    <aside className="sidebar">
+  return <div className={`app-shell theme-${theme} ${mobileMenuOpen?'mobile-menu-visible':''}`}>
+    {mobileMenuOpen && <button className="mobile-menu-backdrop" aria-label="Close menu" onClick={()=>setMobileMenuOpen(false)}/>}
+    <aside className={`sidebar ${mobileMenuOpen?'open':''}`}>
       <div className="sidebar-brand">
         <img src={edpLogo} alt="EDP"/>
         <div><strong>EDP Records</strong><span>MANAGEMENT SYSTEM</span></div>
@@ -82,14 +93,14 @@ function Layout({children}){
       <div className="sidebar-section">
         <span className="sidebar-label">MAIN MENU</span>
         <nav className="side-nav">
-          {navItems.map(item=><NavLink key={item.to} to={item.to} className={({isActive})=>`side-link ${isActive?'active':''}`}>
+          {navItems.map(item=><NavLink key={item.to} to={item.to} onClick={()=>setMobileMenuOpen(false)} className={({isActive})=>`side-link ${isActive?'active':''}`}>
             <Icon name={item.icon}/><span>{item.label}</span>
           </NavLink>)}
         </nav>
       </div>
       <div className="sidebar-bottom">
         <span className="sidebar-label">ACCOUNT</span>
-        <NavLink to="/profile" className={({isActive})=>`side-link ${isActive?'active':''}`}><Icon name="profile"/><span>My Profile</span></NavLink>
+        <NavLink to="/profile" onClick={()=>setMobileMenuOpen(false)} className={({isActive})=>`side-link ${isActive?'active':''}`}><Icon name="profile"/><span>My Profile</span></NavLink>
         <div className="sidebar-user">
           <div className="avatar">{(profile?.name||profile?.username||'U').slice(0,1).toUpperCase()}</div>
           <div className="user-copy"><strong>{profile?.name||'User'}</strong><span>{roleLabel}</span></div>
@@ -99,6 +110,9 @@ function Layout({children}){
     </aside>
     <div className="main-shell">
       <header className="mobile-topbar">
+        <button className="mobile-menu-btn" type="button" aria-label={mobileMenuOpen?'Close menu':'Open menu'} aria-expanded={mobileMenuOpen} onClick={()=>setMobileMenuOpen(v=>!v)}>
+          <span></span><span></span><span></span>
+        </button>
         <div className="sidebar-brand"><img src={edpLogo} alt="EDP"/><div><strong>EDP Records</strong><span>MANAGEMENT SYSTEM</span></div></div>
         <NavLink to="/profile" className="mobile-avatar">{(profile?.name||'U').slice(0,1).toUpperCase()}</NavLink>
       </header>
