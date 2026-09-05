@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { audit, useAuth } from '../auth';
+import ConfirmModal from '../components/ConfirmModal';
 
 const blank={branchId:'',branchName:'',assetCode:'',serialNo:'',itemProduct:'',defectiveNote:'',datePurchase:'',dateRetired:'',receivedBy:'',receivedDate:''};
 const PAGE_SIZE=10;
@@ -11,6 +12,7 @@ const val=x=>x===null||x===undefined?'':String(x);
 export default function Retirement(){
   const {profile}=useAuth();
   const [branches,setBranches]=useState([]),[items,setItems]=useState([]),[form,setForm]=useState({...blank});
+  const [confirm,setConfirm]=useState(null),[confirmSaving,setConfirmSaving]=useState(false);
   const [editing,setEditing]=useState(null),[modalOpen,setModalOpen]=useState(false),[search,setSearch]=useState(''),[page,setPage]=useState(1);
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
   const [showImport,setShowImport]=useState(false),[importRows,setImportRows]=useState([]),[importFile,setImportFile]=useState(null),[importing,setImporting]=useState(false),[importError,setImportError]=useState('');
@@ -41,7 +43,7 @@ export default function Retirement(){
     try{
       const payload={...form,groupId:profile.groupId||'unassigned',updatedAt:serverTimestamp()};
       if(editing){
-        if(profile.role!=='super_admin') throw new Error('Only Super Admin can edit retirement records.');
+        if(!['admin','super_admin'].includes(profile.role)) throw new Error('Only Admin or Super Admin can edit retirement records.');
         await updateDoc(doc(db,'retirements',editing),payload);
         await audit({action:'UPDATE_RETIREMENT',details:`Updated retirement record for ${form.assetCode||form.itemProduct}`,targetUserId:editing})
       }
@@ -49,7 +51,7 @@ export default function Retirement(){
       await load();setSaved(true);reset();return true;
     }catch(e){setError(e.message);return false}finally{setSaving(false)}
   };
-  const edit=x=>{if(profile.role!=='super_admin')return;setEditing(x.id);setForm({...blank,...x});setError('');setSaved(false);setModalOpen(true);document.body.classList.add('modal-open')};
+  const edit=x=>{if(!['admin','super_admin'].includes(profile.role))return;setEditing(x.id);setForm({...blank,...x});setError('');setSaved(false);setModalOpen(true);document.body.classList.add('modal-open')};
   const exportRetirements=async()=>{
     const rows=filtered.map(x=>({
       'BRANCH NAME':val(x.branchName),'ASSET CODE':val(x.assetCode),'SERIAL NO.':val(x.serialNo),
@@ -88,9 +90,26 @@ export default function Retirement(){
   };
 
   const remove=async x=>{
-    if(profile.role!=='super_admin'){setError('Only Super Admin can delete retirement records.');return;}
-    if(!confirm(`Delete retirement record for ${x.assetCode||x.itemProduct||'this item'}?`))return;
-    try{await deleteDoc(doc(db,'retirements',x.id));await audit({action:'DELETE_RETIREMENT',details:`Deleted retirement record for ${x.assetCode||x.itemProduct}`,targetUserId:x.id});await load()}catch(e){setError(e.message)}
+    if(!['admin','super_admin'].includes(profile.role)){setError('Only Admin or Super Admin can delete retirement records.');return;}
+    setConfirm({
+      title:'Delete Retirement Record',
+      message:`Delete retirement record for ${x.assetCode||x.itemProduct||'this item'}?`,
+      confirmLabel:'Delete',
+      danger:true,
+      onConfirm:async()=>{
+        setConfirmSaving(true);
+        try{
+          await deleteDoc(doc(db,'retirements',x.id));
+          await audit({action:'DELETE_RETIREMENT',details:`Deleted retirement record for ${x.assetCode||x.itemProduct}`,targetUserId:x.id});
+          await load();
+        }catch(e){
+          setError(e.message);
+        }finally{
+          setConfirmSaving(false);
+          setConfirm(null);
+        }
+      }
+    });
   };
   const filtered=useMemo(()=>{const q=search.trim().toLowerCase();return items.filter(x=>[x.branchName,x.assetCode,x.serialNo,x.itemProduct,x.defectiveNote,x.datePurchase,x.dateRetired,x.receivedBy,x.receivedDate].join(' ').toLowerCase().includes(q))},[items,search]);
   const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));const safePage=Math.min(page,totalPages);const shown=filtered.slice((safePage-1)*PAGE_SIZE,safePage*PAGE_SIZE);
@@ -135,8 +154,8 @@ export default function Retirement(){
 
     <div className="toolbar-row no-print"><div className="search-wrap"><span>⌕</span><input placeholder="Search branch, asset code, serial no., product..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} record{filtered.length===1?'':'s'}</span></div>
     <div className="content-card table-wrap retirement-table">
-      <table><thead><tr>{profile.role==='super_admin'&&<th>ACTION</th>}<th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th></tr></thead>
-      <tbody>{loading?<tr><td colSpan={profile.role==='super_admin'?10:9} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}>{profile.role==='super_admin'&&<td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td>}<td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td></tr>):<tr><td colSpan={profile.role==='super_admin'?10:9} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
+      <table><thead><tr>{['admin','super_admin'].includes(profile.role)&&<th>ACTION</th>}<th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th></tr></thead>
+      <tbody>{loading?<tr><td colSpan={['admin','super_admin'].includes(profile.role)?10:9} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}>{['admin','super_admin'].includes(profile.role)&&<td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td>}<td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td></tr>):<tr><td colSpan={['admin','super_admin'].includes(profile.role)?10:9} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
       {!loading&&filtered.length>0&&(()=>{
         const pages=[];
         const addPage=p=>pages.push(p);
@@ -164,5 +183,6 @@ export default function Retirement(){
         </div>;
       })()}
     </div>
+    <ConfirmModal open={Boolean(confirm)} title={confirm?.title} message={confirm?.message} confirmLabel={confirm?.confirmLabel} danger={confirm?.danger} saving={confirmSaving} onConfirm={confirm?.onConfirm||(()=>{})} onCancel={()=>{if(!confirmSaving)setConfirm(null)}}/>
   </>;
 }

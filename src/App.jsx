@@ -14,6 +14,8 @@ import Groups from './pages/Groups';
 import Retirement from './pages/Retirement';
 import PartsInventory from './pages/PartsInventory';
 import UsedParts from './pages/UsedParts';
+import JobOrder from './pages/JobOrder';
+import JobDone from './pages/JobDone';
 
 function Protected({children,roles}){
   const {user,profile,loading}=useAuth();
@@ -38,6 +40,8 @@ const Icon=({name})=>{
     retirement:<><path d="M7 3h10v4H7z"/><path d="M5 7h14v14H5z"/><path d="M8 11h8M8 15h6"/></>,
     inventory:<><path d="M3 7h18v14H3z"/><path d="M7 7V4h10v3"/><path d="M3 12h18M9 12v3h6v-3"/></>,
     used:<><path d="M4 7h16v13H4z"/><path d="M8 7V4h8v3M8 11h8M8 15h5"/></>,
+    joborder:<><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></>,
+    jobdone:<><path d="M5 4h14v16H5z"/><path d="M8 9l2 2 5-5M8 15h8"/></>,
     logout:<><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/></>
   };
   return <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>
@@ -70,7 +74,9 @@ function Layout({children}){
     ...(role==='admin'||role==='employee'||role==='super_admin' ? [
       {to:'/branches',label:'Branches',icon:'branch'},
       {to:'/accomplishment',label:'Accomplishment',icon:'history'},
-      {to:'/retirement',label:'Retirement',icon:'retirement'}
+      {to:'/retirement',label:'Retirement',icon:'retirement'},
+      {to:'/job-order',label:'Job Order',icon:'joborder'},
+      {to:'/job-done',label:'Job Done',icon:'jobdone'}
     ] : []),
     ...(role==='super_admin' ? [
       {to:'/parts-inventory',label:'Parts Inventory',icon:'inventory'},
@@ -133,6 +139,8 @@ export default function App(){
     <Route path="/groups" element={<Protected roles={['super_admin']}><Layout><Groups/></Layout></Protected>}/>
     <Route path="/accomplishment" element={<Protected roles={['admin','employee','super_admin']}><Layout><AccomplishmentHistory/></Layout></Protected>}/>
     <Route path="/retirement" element={<Protected roles={['admin','employee','super_admin']}><Layout><Retirement/></Layout></Protected>}/>
+    <Route path="/job-order" element={<Protected roles={['admin','employee','super_admin']}><Layout><JobOrder/></Layout></Protected>}/>
+    <Route path="/job-done" element={<Protected roles={['admin','employee','super_admin']}><Layout><JobDone/></Layout></Protected>}/>
     <Route path="/parts-inventory" element={<Protected roles={['super_admin']}><Layout><PartsInventory/></Layout></Protected>}/>
     <Route path="/used-parts" element={<Protected roles={['super_admin']}><Layout><UsedParts/></Layout></Protected>}/>
     <Route path="/audit-logs" element={<Protected roles={['super_admin']}><Layout><AuditLogs/></Layout></Protected>}/>

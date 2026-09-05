@@ -3,6 +3,7 @@ import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTime
 import * as XLSX from 'xlsx';
 import { db } from '../firebase';
 import { audit, useAuth } from '../auth';
+import ConfirmModal from '../components/ConfirmModal';
 
 const blank = {
   branchName:'', branchType:'', company:'', accountNo:'', telNo:'', contactPerson:'', contactNo:'', address:'',
@@ -48,6 +49,7 @@ export default function Branches(){
   const [showModal,setShowModal]=useState(false);
   const [viewing,setViewing]=useState(null);
   const [loading,setLoading]=useState(true);
+  const [confirm,setConfirm]=useState(null),[confirmSaving,setConfirmSaving]=useState(false);
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState('');
   const [showImport,setShowImport]=useState(false);
@@ -132,9 +134,25 @@ export default function Branches(){
   };
 
   const remove=async b=>{
-    if(!confirm(`Delete branch ${b.branchName||'record'}? This action cannot be undone.`))return;
-    try{await deleteDoc(doc(db,'branches',b.id));await audit({action:'DELETE_BRANCH',details:`Deleted branch ${b.branchName||b.id}`,targetUserId:b.id});await load()}
-    catch(e){setError(e.message || 'Unable to delete branch.')}
+    setConfirm({
+      title:'Delete Branch',
+      message:`Delete branch ${b.branchName||'record'}?\n\nThis action cannot be undone.`,
+      confirmLabel:'Delete',
+      danger:true,
+      onConfirm:async()=>{
+        setConfirmSaving(true);
+        try{
+          await deleteDoc(doc(db,'branches',b.id));
+          await audit({action:'DELETE_BRANCH',details:`Deleted branch ${b.branchName||b.id}`,targetUserId:b.id});
+          await load();
+        }catch(e){
+          setError(e.message || 'Unable to delete branch.');
+        }finally{
+          setConfirmSaving(false);
+          setConfirm(null);
+        }
+      }
+    });
   };
 
   const toImportRow=row=>{
@@ -310,5 +328,6 @@ export default function Branches(){
         </div>
       </div>
     </div>}
+    <ConfirmModal open={Boolean(confirm)} title={confirm?.title} message={confirm?.message} confirmLabel={confirm?.confirmLabel} danger={confirm?.danger} saving={confirmSaving} onConfirm={confirm?.onConfirm||(()=>{})} onCancel={()=>{if(!confirmSaving)setConfirm(null)}}/>
   </section>;
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { audit, useAuth } from '../auth';
+import ConfirmModal from '../components/ConfirmModal';
 
 const blank={itemCode:'',description:'',controlSerialNo:'',branch:'RCFSI-HO',quantity:'',price:''};
 const PAGE_SIZE=10;
@@ -10,6 +11,7 @@ const val=x=>x===null||x===undefined?'':String(x);
 export default function PartsInventory(){
   const {profile}=useAuth();
   const [items,setItems]=useState([]),[form,setForm]=useState({...blank});
+  const [confirm,setConfirm]=useState(null),[confirmSaving,setConfirmSaving]=useState(false);
   const [editing,setEditing]=useState(null),[modalOpen,setModalOpen]=useState(false);
   const [search,setSearch]=useState(''),[branchFilter,setBranchFilter]=useState('ALL'),[page,setPage]=useState(1);
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
@@ -54,8 +56,25 @@ export default function PartsInventory(){
   };
 
   const remove=async x=>{
-    if(!confirm(`Delete inventory item ${x.itemCode||x.description||'record'}? This action cannot be undone.`))return;
-    try{await deleteDoc(doc(db,'partsInventory',x.id));await audit({action:'DELETE_PARTS_INVENTORY',details:`Deleted parts inventory ${x.itemCode||x.description}`,targetUserId:x.id});await load()}catch(e){setError(e.message||'Unable to delete inventory item.')}
+    setConfirm({
+      title:'Delete Inventory Item',
+      message:`Delete inventory item ${x.itemCode||x.description||'record'}?\n\nThis action cannot be undone.`,
+      confirmLabel:'Delete',
+      danger:true,
+      onConfirm:async()=>{
+        setConfirmSaving(true);
+        try{
+          await deleteDoc(doc(db,'partsInventory',x.id));
+          await audit({action:'DELETE_PARTS_INVENTORY',details:`Deleted parts inventory ${x.itemCode||x.description}`,targetUserId:x.id});
+          await load();
+        }catch(e){
+          setError(e.message||'Unable to delete inventory item.');
+        }finally{
+          setConfirmSaving(false);
+          setConfirm(null);
+        }
+      }
+    });
   };
 
   const filtered=useMemo(()=>{const q=search.trim().toLowerCase();return items.filter(x=>{const hay=[x.itemCode,x.description,x.controlSerialNo,x.branch,x.quantity,x.price].join(' ').toLowerCase();return (!q||hay.includes(q))&&(branchFilter==='ALL'||x.branch===branchFilter)})},[items,search,branchFilter]);
@@ -73,5 +92,6 @@ export default function PartsInventory(){
     <div className="content-card table-wrap parts-table"><table><thead><tr><th>ITEM CODE</th><th>DESCRIPTION</th><th>CONTROL / SERIAL NO.</th><th>BRANCH</th><th>QUANTITY</th><th>PRICE</th><th>TOTAL VALUE</th><th className="action-col">ACTION</th></tr></thead><tbody>{loading?<tr><td colSpan="8" className="branch-empty">Loading Parts Inventory...</td></tr>:shown.length===0?<tr><td colSpan="8" className="branch-empty"><div className="branch-empty-icon">◌</div><strong>No inventory records found</strong><p>Add your first parts inventory item.</p><button className="amber-btn" onClick={openAdd}>＋ Add Inventory Item</button></td></tr>:shown.map(x=><tr key={x.id}><td><span className="table-primary mono-cell">{val(x.itemCode)||'—'}</span></td><td><span className="table-primary">{val(x.description)||'—'}</span></td><td className="mono-cell">{val(x.controlSerialNo)||'—'}</td><td><span className="parts-branch-badge">{val(x.branch)}</span></td><td className="parts-number">{Number(x.quantity||0).toLocaleString()}</td><td className="parts-number">₱ {money(x.price)}</td><td className="parts-number">₱ {money((Number(x.quantity)||0)*(Number(x.price)||0))}</td><td className="action-cell"><button className="table-action edit" onClick={()=>openEdit(x)}>Edit</button><button className="table-action danger" onClick={()=>remove(x)}>Delete</button></td></tr>)}</tbody></table></div>
     <div className="pagination-row"><span>Showing {filtered.length?((safePage-1)*PAGE_SIZE+1):0}–{Math.min(safePage*PAGE_SIZE,filtered.length)} of {filtered.length}</span><div><button className="page-btn" disabled={safePage===1} onClick={()=>setPage(p=>Math.max(1,p-1))}>‹</button><b>{safePage} / {totalPages}</b><button className="page-btn" disabled={safePage===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>›</button></div></div>
     {modalOpen&&<div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)closeModal()}}><div className="modal branch-modal parts-editor-modal" role="dialog" aria-modal="true" aria-labelledby="parts-inventory-modal-title"><div className="modal-header"><div><p className="eyebrow">PARTS INVENTORY</p><h2 id="parts-inventory-modal-title">{editing?'Edit Inventory Item':'Add Inventory Item'}</h2><p className="subtext">Same Item Code is allowed when the Control/Serial No. is different.</p></div><button className="modal-close" onClick={closeModal}>×</button></div><form onSubmit={save}><div className="modal-body"><div className="parts-form-grid"><label>ITEM CODE<input value={form.itemCode} onChange={e=>change('itemCode',e.target.value)} required/></label><label>DESCRIPTION<input value={form.description} onChange={e=>change('description',e.target.value)} required/></label><label>CONTROL / SERIAL NO.<input value={form.controlSerialNo} onChange={e=>change('controlSerialNo',e.target.value)}/></label><label>BRANCH<select value={form.branch} onChange={e=>change('branch',e.target.value)}><option>RCFSI-HO</option><option>JWMC-HO</option></select></label><label>QUANTITY<input type="number" min="0" step="1" value={form.quantity} onChange={e=>change('quantity',e.target.value)} required/></label><label>PRICE<input type="number" min="0" step="0.01" value={form.price} onChange={e=>change('price',e.target.value)}/></label></div>{error&&<div className="error modal-error">{error}</div>}</div><div className="modal-footer"><button type="button" className="ghost-btn" onClick={closeModal}>Cancel</button><button type="submit" className="amber-btn" disabled={saving}>{saving?'Saving...':editing?'Save Changes':'Add Item'}</button></div></form></div></div>}
+    <ConfirmModal open={Boolean(confirm)} title={confirm?.title} message={confirm?.message} confirmLabel={confirm?.confirmLabel} danger={confirm?.danger} saving={confirmSaving} onConfirm={confirm?.onConfirm||(()=>{})} onCancel={()=>{if(!confirmSaving)setConfirm(null)}}/>
   </>;
 }

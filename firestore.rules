@@ -6,6 +6,8 @@ service cloud.firestore {
     function isSuperAdmin() { return signedIn() && myUser().role == 'super_admin'; }
     function isAdmin() { return signedIn() && myUser().role in ['admin','super_admin']; }
     function isStaff() { return signedIn() && myUser().role in ['admin','employee','super_admin']; }
+    function myGroupId() { return myUser().get('groupId', 'unassigned'); }
+    function sameGroup(data) { return isSuperAdmin() || (isStaff() && data.groupId == myGroupId()); }
 
     match /users/{uid} {
       allow create: if (isSuperAdmin() && request.resource.data.role in ['admin','employee']) || (signedIn() && request.auth.uid == uid && request.resource.data.role == 'employee');
@@ -28,28 +30,50 @@ service cloud.firestore {
 
     match /branches/{branchId} {
       allow read: if isStaff();
-      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
-      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
+      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myGroupId() && request.resource.data.groupId == myGroupId());
     }
 
     match /accomplishments/{accomplishmentId} {
-      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
       allow read: if isStaff();
-      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myUser().groupId && request.resource.data.groupId == myUser().groupId);
+      allow update, delete: if isSuperAdmin() || (isStaff() && resource.data.groupId == myGroupId() && request.resource.data.groupId == myGroupId());
     }
 
     match /retirements/{retirementId} {
-      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myUser().groupId);
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
       allow read: if isStaff();
-      allow update, delete: if isSuperAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /jobOrders/{jobOrderId} {
+      allow create: if isStaff() && request.resource.data.groupId == myGroupId();
+      allow read: if sameGroup(resource.data);
+      allow update: if sameGroup(resource.data) && request.resource.data.groupId == resource.data.groupId;
+      allow delete: if sameGroup(resource.data);
+    }
+
+
+    match /jobDone/{jobDoneId} {
+      allow create: if isStaff() && request.resource.data.groupId == myGroupId();
+      allow read: if sameGroup(resource.data);
+      allow update: if sameGroup(resource.data) && request.resource.data.groupId == resource.data.groupId;
+      allow delete: if isSuperAdmin();
     }
 
     match /partsInventory/{itemId} {
-      allow read, create, update, delete: if isSuperAdmin();
+      allow read: if isStaff();
+      allow create, delete: if isSuperAdmin();
+      // Staff may only decrement inventory by exactly 1 during a repair workflow.
+      allow update: if isSuperAdmin() || (isStaff()
+        && request.resource.data.quantity == resource.data.quantity - 1
+        && request.resource.data.itemCode == resource.data.itemCode
+        && request.resource.data.controlSerialNo == resource.data.controlSerialNo);
     }
 
     match /usedParts/{usedPartId} {
-      allow read, create, update, delete: if isSuperAdmin();
+      allow read, update, delete: if isSuperAdmin();
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
     }
 
 
