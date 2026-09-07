@@ -121,7 +121,7 @@ export default function Retirement(){
     }catch(e){setImportError(e.message||'Hindi ma-import ang retirement records.')}finally{setImporting(false)}
   };
 
-  const remove=async x=>{
+  const remove=async(x,onDone)=>{
     if(!['admin','super_admin'].includes(profile.role)){setError('Only Admin or Super Admin can delete retirement records.');return;}
     setConfirm({
       title:'Delete Retirement Record',
@@ -134,6 +134,7 @@ export default function Retirement(){
           await deleteDoc(doc(db,'retirements',x.id));
           await audit({action:'DELETE_RETIREMENT',details:`Deleted retirement record for ${x.assetCode||x.itemProduct}`,targetUserId:x.id});
           await load();
+          if(onDone)onDone();
         }catch(e){
           setError(e.message);
         }finally{
@@ -179,15 +180,15 @@ export default function Retirement(){
             <label className="field"><span>Received By</span><input value={form.receivedBy} onChange={e=>change('receivedBy',e.target.value)} placeholder="Name of receiver"/></label>
             <label className="field"><span>Received Date</span><input type="date" value={form.receivedDate} onChange={e=>change('receivedDate',e.target.value)}/></label>
           </div>
-          <div className="retirement-actions"><button type="button" className="outline-btn" onClick={closeModal}>Cancel</button><button className="amber-btn" disabled={saving}>{saving?'Saving...':editing?'Update Record':'Save Retirement'}</button></div>
+          <div className="retirement-actions">{editing&&<button type="button" className="link-btn danger-link" disabled={saving} onClick={()=>{const x=items.find(i=>i.id===editing);if(x)remove(x,closeModal)}}>Delete Record</button>}<div className="retirement-actions-right"><button type="button" className="outline-btn" onClick={closeModal}>Cancel</button><button className="amber-btn" disabled={saving}>{saving?'Saving...':editing?'Update Record':'Save Retirement'}</button></div></div>
         </form>
       </div>
     </div>}
 
     <div className="toolbar-row no-print"><div className="search-wrap"><span>⌕</span><input placeholder="Search branch, asset code, serial no., product..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} record{filtered.length===1?'':'s'}</span></div>
     <div className="content-card table-wrap retirement-table">
-      <table><thead><tr><th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th><th>STATUS</th>{['admin','super_admin'].includes(profile.role)&&<th>ACTION</th>}</tr></thead>
-      <tbody>{loading?<tr><td colSpan={['admin','super_admin'].includes(profile.role)?11:10} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id} className={['admin','super_admin'].includes(profile.role)?'retirement-clickable-row':''} onClick={e=>handleRowClick(e,x)} onKeyDown={e=>handleRowKeyDown(e,x)} tabIndex={['admin','super_admin'].includes(profile.role)?0:undefined} role={['admin','super_admin'].includes(profile.role)?'button':undefined} aria-label={['admin','super_admin'].includes(profile.role)?`Edit retirement record ${x.assetCode||x.itemProduct||''}`:undefined}><td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td className="retirement-status-cell">{['admin','super_admin'].includes(profile.role)?<select className={`retirement-status-select ${(x.status||NOT_REPLACED).toLowerCase().replace(/\s+/g,'-')}`} value={x.status||NOT_REPLACED} onClick={e=>e.stopPropagation()} onChange={e=>requestStatusChange(x,e.target.value)} disabled={(x.status||NOT_REPLACED)===REPLACED} aria-label={`Replacement status for ${x.assetCode||x.itemProduct||'retirement record'}`}><option value={NOT_REPLACED}>{NOT_REPLACED}</option><option value={REPLACED}>{REPLACED}</option></select>:<span className={`replacement-status-pill ${(x.status||NOT_REPLACED).toLowerCase().replace(/\s+/g,'-')}`}>{val(x.status||NOT_REPLACED)}</span>}{(x.status||NOT_REPLACED)===REPLACED&&<small className="retirement-status-locked">🔒 Locked</small>}</td>{['admin','super_admin'].includes(profile.role)&&<td className="retirement-action-cell"><button className="link-btn danger-link" onClick={e=>{e.stopPropagation();remove(x)}}>Delete</button></td>}</tr>):<tr><td colSpan={['admin','super_admin'].includes(profile.role)?11:10} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
+      <table><thead><tr><th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th><th>STATUS</th></tr></thead>
+      <tbody>{loading?<tr><td colSpan={10} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id} className={['admin','super_admin'].includes(profile.role)?'retirement-clickable-row':''} onClick={e=>handleRowClick(e,x)} onKeyDown={e=>handleRowKeyDown(e,x)} tabIndex={['admin','super_admin'].includes(profile.role)?0:undefined} role={['admin','super_admin'].includes(profile.role)?'button':undefined} aria-label={['admin','super_admin'].includes(profile.role)?`Edit retirement record ${x.assetCode||x.itemProduct||''}`:undefined}><td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td className="retirement-status-cell">{['admin','super_admin'].includes(profile.role)?<select className={`retirement-status-select ${(x.status||NOT_REPLACED).toLowerCase().replace(/\s+/g,'-')}`} value={x.status||NOT_REPLACED} onClick={e=>e.stopPropagation()} onChange={e=>requestStatusChange(x,e.target.value)} disabled={(x.status||NOT_REPLACED)===REPLACED} aria-label={`Replacement status for ${x.assetCode||x.itemProduct||'retirement record'}`}><option value={NOT_REPLACED}>{NOT_REPLACED}</option><option value={REPLACED}>{REPLACED}</option></select>:<span className={`replacement-status-pill ${(x.status||NOT_REPLACED).toLowerCase().replace(/\s+/g,'-')}`}>{val(x.status||NOT_REPLACED)}</span>}{(x.status||NOT_REPLACED)===REPLACED&&<small className="retirement-status-locked">🔒 Locked</small>}</td></tr>):<tr><td colSpan={10} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
       {!loading&&filtered.length>0&&(()=>{
         const pages=[];
         const addPage=p=>pages.push(p);

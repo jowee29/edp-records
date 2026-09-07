@@ -68,23 +68,28 @@ function Layout({children}){
   const nav=async()=>{await audit({action:'LOGOUT',details:'User logged out'});await logout();navigate('/login')};
   const role=profile?.role||'employee';
   const roleLabel=role.replace('_',' ').toUpperCase();
-  const navItems=[
-    {to:'/dashboard',label:'Dashboard',icon:'grid'},
-    ...(role==='super_admin' ? [{to:'/users',label:'User Management',icon:'users'}] : []),
-    ...(role==='admin'||role==='employee'||role==='super_admin' ? [
+  const isSuperAdmin=role==='super_admin';
+  const navGroups=[
+    {label:'OVERVIEW',items:[
+      {to:'/dashboard',label:'Dashboard',icon:'grid'}
+    ]},
+    {label:'OPERATIONS',items:[
       {to:'/branches',label:'Branches',icon:'branch'},
-      {to:'/accomplishment',label:'Accomplishment',icon:'history'},
-      {to:'/retirement',label:'Retirement',icon:'retirement'},
       {to:'/job-order',label:'Job Order',icon:'joborder'},
-      {to:'/job-done',label:'Job Done',icon:'jobdone'}
-    ] : []),
-    ...(role==='super_admin' ? [
+      {to:'/job-done',label:'Job Done',icon:'jobdone'},
+      {to:'/accomplishment',label:'Accomplishment',icon:'history'},
+      {to:'/retirement',label:'Retirement',icon:'retirement'}
+    ]},
+    {label:'INVENTORY',items: isSuperAdmin ? [
       {to:'/parts-inventory',label:'Parts Inventory',icon:'inventory'},
-      {to:'/used-parts',label:'Used Parts',icon:'used'},
+      {to:'/used-parts',label:'Used Parts',icon:'used'}
+    ] : []},
+    {label:'ADMINISTRATION',items: isSuperAdmin ? [
+      {to:'/users',label:'User Management',icon:'users'},
       {to:'/groups',label:'Groups',icon:'groups'},
       {to:'/audit-logs',label:'Audit Logs',icon:'audit'}
-    ] : [])
-  ];
+    ] : []}
+  ].filter(g=>g.items.length>0);
   return <div className={`app-shell theme-${theme} ${mobileMenuOpen?'mobile-menu-visible':''}`}>
     {mobileMenuOpen && <button className="mobile-menu-backdrop" aria-label="Close menu" onClick={()=>setMobileMenuOpen(false)}/>}
     <aside className={`sidebar ${mobileMenuOpen?'open':''}`}>
@@ -97,12 +102,14 @@ function Layout({children}){
         <button className={`theme-btn ${theme==='pink'?'active':''}`} onClick={()=>setTheme('pink')} title="Pink Mode">♡ <span>Pink</span></button>
       </div>
       <div className="sidebar-section">
-        <span className="sidebar-label">MAIN MENU</span>
-        <nav className="side-nav">
-          {navItems.map(item=><NavLink key={item.to} to={item.to} onClick={()=>setMobileMenuOpen(false)} className={({isActive})=>`side-link ${isActive?'active':''}`}>
-            <Icon name={item.icon}/><span>{item.label}</span>
-          </NavLink>)}
-        </nav>
+        {navGroups.map(group=><div className="sidebar-group" key={group.label}>
+          <span className="sidebar-label">{group.label}</span>
+          <nav className="side-nav">
+            {group.items.map(item=><NavLink key={item.to} to={item.to} onClick={()=>setMobileMenuOpen(false)} className={({isActive})=>`side-link ${isActive?'active':''}`}>
+              <Icon name={item.icon}/><span>{item.label}</span>
+            </NavLink>)}
+          </nav>
+        </div>)}
       </div>
       <div className="sidebar-bottom">
         <span className="sidebar-label">ACCOUNT</span>
