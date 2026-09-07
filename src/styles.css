@@ -1643,3 +1643,19 @@ html[data-theme="pink"] .section-note{color:#a45d79!important}
 .replacement-status-pill.not-replaced{opacity:.8}
 .replacement-status-pill.replaced{font-weight:800}
 .field-hint{display:block;margin-top:5px;font-size:11px;opacity:.65}
+
+/* Retirement status is updated directly from the table. */
+.retirement-status-cell{min-width:150px;vertical-align:middle}
+.retirement-status-select{width:150px;min-height:32px;padding:6px 28px 6px 9px;border:1px solid #394346;border-radius:6px;background:#111719;color:#d9dfe0;font-size:10px;font-weight:800;cursor:pointer}
+.retirement-status-select:hover:not(:disabled){border-color:#f5a623;color:#f5b33e}
+.retirement-status-select:focus{outline:none;border-color:#f5a623;box-shadow:0 0 0 2px #f5a62322}
+.retirement-status-select.replaced{border-color:#4f452e;background:#241f16;color:#f2bd61}
+.retirement-status-select:disabled{opacity:1;cursor:not-allowed}
+.retirement-status-locked{display:block;margin-top:4px;color:#8c9598;font-size:8px;font-weight:800;white-space:nowrap}
+html[data-theme="pink"] .retirement-status-select{background:#fff;border-color:#ffd7e5;color:#351c28}
+html[data-theme="pink"] .retirement-status-select.replaced{background:#fff5df;border-color:#f2d49a;color:#8a5a08}
+
+/* Retirement: show Edit only when the row is hovered/focused */
+.retirement-table tbody tr .retirement-edit-action{opacity:0;visibility:hidden;transform:translateX(-3px);transition:opacity .16s ease,visibility .16s ease,transform .16s ease;pointer-events:none}
+.retirement-table tbody tr:hover .retirement-edit-action,.retirement-table tbody tr:focus-within .retirement-edit-action{opacity:1;visibility:visible;transform:translateX(0);pointer-events:auto}
+.retirement-table tbody tr .retirement-edit-action:focus{opacity:1;visibility:visible;pointer-events:auto}

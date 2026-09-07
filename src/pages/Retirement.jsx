@@ -43,10 +43,10 @@ export default function Retirement(){
   const save=async e=>{
     e.preventDefault();setSaving(true);setError('');setSaved(false);
     try{
-      const payload={...form,status:form.status===REPLACED?REPLACED:NOT_REPLACED,groupId:profile.groupId||'unassigned',updatedAt:serverTimestamp()};
+      const existing=editing?items.find(x=>x.id===editing):null;
+      const payload={...form,status:editing?(existing?.status||NOT_REPLACED):NOT_REPLACED,groupId:profile.groupId||'unassigned',updatedAt:serverTimestamp()};
       if(editing){
-        const existing=items.find(x=>x.id===editing);
-        if(existing?.status===REPLACED && payload.status!==REPLACED) throw new Error('This retirement record is already marked Replaced and its status can no longer be changed.');
+        if(!existing) throw new Error('Retirement record not found.');
         if(!['admin','super_admin'].includes(profile.role)) throw new Error('Only Admin or Super Admin can edit retirement records.');
         await updateDoc(doc(db,'retirements',editing),payload);
         await audit({action:'UPDATE_RETIREMENT',details:`Updated retirement record for ${form.assetCode||form.itemProduct}`,targetUserId:editing})
@@ -55,23 +55,33 @@ export default function Retirement(){
       await load();setSaved(true);reset();return true;
     }catch(e){setError(e.message);return false}finally{setSaving(false)}
   };
-  const requestStatusChange=value=>{
-    if(value===REPLACED && form.status!==REPLACED){
-      setConfirm({
-        title:'Confirm Replacement Status',
-        message:`You are about to mark ${form.assetCode||form.itemProduct||'this retirement record'} as Replaced.\n\nOnce confirmed, this status will be locked and cannot be changed back to Not Replaced.`,
-        confirmLabel:'Confirm & Lock',
-        danger:false,
-        onConfirm:()=>{
-          setForm(f=>({...f,status:REPLACED}));
-          setConfirm(null);
-        }
-      });
+  const requestStatusChange=(record,value)=>{
+    const current=String(record?.status||NOT_REPLACED).trim()===REPLACED?REPLACED:NOT_REPLACED;
+    if(current===REPLACED) return;
+    if(value!==REPLACED){
+      if(value===NOT_REPLACED && current!==NOT_REPLACED) setError('This retirement record is already marked Replaced and its status can no longer be changed.');
       return;
     }
-    if(form.status!==REPLACED) setForm(f=>({...f,status:value}));
+    setConfirm({
+      title:'Confirm Replacement Status',
+      message:`You are about to mark ${record.assetCode||record.itemProduct||'this retirement record'} as Replaced.\n\nOnce confirmed, this status will be locked and cannot be changed back to Not Replaced.`,
+      confirmLabel:'Confirm & Lock',
+      danger:false,
+      onConfirm:async()=>{
+        setConfirmSaving(true);setError('');
+        try{
+          await updateDoc(doc(db,'retirements',record.id),{status:REPLACED,updatedAt:serverTimestamp()});
+          await audit({action:'UPDATE_RETIREMENT_STATUS',details:`Marked retirement record as Replaced for ${record.assetCode||record.itemProduct}`,targetUserId:record.id});
+          setConfirm(null);
+          await load();
+          setSaved(true);
+        }catch(e){
+          setError(e.message||'Failed to update replacement status.');
+        }finally{setConfirmSaving(false)}
+      }
+    });
   };
-  const edit=x=>{if(!['admin','super_admin'].includes(profile.role))return;const normalizedStatus=String(x.status||NOT_REPLACED).trim()===REPLACED?REPLACED:NOT_REPLACED;setEditing(x.id);setForm({...blank,...x,status:normalizedStatus});setError('');setSaved(false);setModalOpen(true);document.body.classList.add('modal-open')};
+  const edit=x=>{if(!['admin','super_admin'].includes(profile.role))return;setEditing(x.id);setForm({...blank,...x,status:NOT_REPLACED});setError('');setSaved(false);setModalOpen(true);document.body.classList.add('modal-open')};
   const exportRetirements=async()=>{
     const rows=filtered.map(x=>({
       'BRANCH NAME':val(x.branchName),'ASSET CODE':val(x.assetCode),'SERIAL NO.':val(x.serialNo),
@@ -164,7 +174,6 @@ export default function Retirement(){
             <label className="field span-2"><span>Defective Note</span><textarea value={form.defectiveNote} onChange={e=>change('defectiveNote',e.target.value)} rows="2" placeholder="Describe the defect, damage, or reason for retirement..."/></label>
             <label className="field"><span>Date Purchase</span><input type="date" value={form.datePurchase} onChange={e=>change('datePurchase',e.target.value)}/></label>
             <label className="field"><span>Date Retired</span><input type="date" value={form.dateRetired} onChange={e=>change('dateRetired',e.target.value)} required/></label>
-            <label className="field"><span>Replacement Status</span><select value={form.status||NOT_REPLACED} onChange={e=>requestStatusChange(e.target.value)} disabled={form.status===REPLACED} aria-label="Replacement Status"><option value={NOT_REPLACED}>{NOT_REPLACED}</option><option value={REPLACED}>{REPLACED}</option></select>{form.status===REPLACED&&<small className="field-hint">Locked after confirmation.</small>}</label>
             <label className="field"><span>Received By</span><input value={form.receivedBy} onChange={e=>change('receivedBy',e.target.value)} placeholder="Name of receiver"/></label>
             <label className="field"><span>Received Date</span><input type="date" value={form.receivedDate} onChange={e=>change('receivedDate',e.target.value)}/></label>
           </div>
@@ -176,7 +185,7 @@ export default function Retirement(){
     <div className="toolbar-row no-print"><div className="search-wrap"><span>⌕</span><input placeholder="Search branch, asset code, serial no., product..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} record{filtered.length===1?'':'s'}</span></div>
     <div className="content-card table-wrap retirement-table">
       <table><thead><tr>{['admin','super_admin'].includes(profile.role)&&<th>ACTION</th>}<th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th><th>STATUS</th></tr></thead>
-      <tbody>{loading?<tr><td colSpan={['admin','super_admin'].includes(profile.role)?11:10} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}>{['admin','super_admin'].includes(profile.role)&&<td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td>}<td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td><span className={`replacement-status-pill ${(x.status||NOT_REPLACED).toLowerCase().replace(/\s+/g,'-')}`}>{val(x.status||NOT_REPLACED)}</span></td></tr>):<tr><td colSpan={['admin','super_admin'].includes(profile.role)?11:10} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
+      <tbody>{loading?<tr><td colSpan={['admin','super_admin'].includes(profile.role)?11:10} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}>{['admin','super_admin'].includes(profile.role)&&<td><div className="actions"><button className="link-btn retirement-edit-action" onClick={()=>edit(x)} aria-label={`Edit ${x.assetCode||x.itemProduct||'retirement record'}`}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td>}<td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td className="retirement-status-cell">{['admin','super_admin'].includes(profile.role)?<select className={`retirement-status-select ${(x.status||NOT_REPLACED).toLowerCase().replace(/\s+/g,'-')}`} value={x.status||NOT_REPLACED} onChange={e=>requestStatusChange(x,e.target.value)} disabled={(x.status||NOT_REPLACED)===REPLACED} aria-label={`Replacement status for ${x.assetCode||x.itemProduct||'retirement record'}`}><option value={NOT_REPLACED}>{NOT_REPLACED}</option><option value={REPLACED}>{REPLACED}</option></select>:<span className={`replacement-status-pill ${(x.status||NOT_REPLACED).toLowerCase().replace(/\s+/g,'-')}`}>{val(x.status||NOT_REPLACED)}</span>}{(x.status||NOT_REPLACED)===REPLACED&&<small className="retirement-status-locked">🔒 Locked</small>}</td></tr>):<tr><td colSpan={['admin','super_admin'].includes(profile.role)?11:10} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
       {!loading&&filtered.length>0&&(()=>{
         const pages=[];
         const addPage=p=>pages.push(p);
