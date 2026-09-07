@@ -71,7 +71,7 @@ export default function Retirement(){
     }
     if(form.status!==REPLACED) setForm(f=>({...f,status:value}));
   };
-  const edit=x=>{if(!['admin','super_admin'].includes(profile.role))return;setEditing(x.id);setForm({...blank,...x});setError('');setSaved(false);setModalOpen(true);document.body.classList.add('modal-open')};
+  const edit=x=>{if(!['admin','super_admin'].includes(profile.role))return;const normalizedStatus=String(x.status||NOT_REPLACED).trim()===REPLACED?REPLACED:NOT_REPLACED;setEditing(x.id);setForm({...blank,...x,status:normalizedStatus});setError('');setSaved(false);setModalOpen(true);document.body.classList.add('modal-open')};
   const exportRetirements=async()=>{
     const rows=filtered.map(x=>({
       'BRANCH NAME':val(x.branchName),'ASSET CODE':val(x.assetCode),'SERIAL NO.':val(x.serialNo),
@@ -131,7 +131,7 @@ export default function Retirement(){
       }
     });
   };
-  const filtered=useMemo(()=>{const q=search.trim().toLowerCase();return items.filter(x=>[x.branchName,x.assetCode,x.serialNo,x.itemProduct,x.defectiveNote,x.datePurchase,x.dateRetired,x.receivedBy,x.receivedDate].join(' ').toLowerCase().includes(q))},[items,search]);
+  const filtered=useMemo(()=>{const q=search.trim().toLowerCase();return items.filter(x=>[x.branchName,x.assetCode,x.serialNo,x.itemProduct,x.defectiveNote,x.datePurchase,x.dateRetired,x.receivedBy,x.receivedDate,x.status].join(' ').toLowerCase().includes(q))},[items,search]);
   const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));const safePage=Math.min(page,totalPages);const shown=filtered.slice((safePage-1)*PAGE_SIZE,safePage*PAGE_SIZE);
   useEffect(()=>{setPage(1)},[search]);
 
@@ -164,7 +164,7 @@ export default function Retirement(){
             <label className="field span-2"><span>Defective Note</span><textarea value={form.defectiveNote} onChange={e=>change('defectiveNote',e.target.value)} rows="2" placeholder="Describe the defect, damage, or reason for retirement..."/></label>
             <label className="field"><span>Date Purchase</span><input type="date" value={form.datePurchase} onChange={e=>change('datePurchase',e.target.value)}/></label>
             <label className="field"><span>Date Retired</span><input type="date" value={form.dateRetired} onChange={e=>change('dateRetired',e.target.value)} required/></label>
-            <label className="field"><span>Replacement Status</span><select value={form.status||NOT_REPLACED} onChange={e=>requestStatusChange(e.target.value)} disabled={form.status===REPLACED}><option value={NOT_REPLACED}>{NOT_REPLACED}</option><option value={REPLACED}>{REPLACED}</option></select>{form.status===REPLACED&&<small className="field-hint">Locked after confirmation.</small>}</label>
+            <label className="field"><span>Replacement Status</span><select value={form.status||NOT_REPLACED} onChange={e=>requestStatusChange(e.target.value)} disabled={form.status===REPLACED} aria-label="Replacement Status"><option value={NOT_REPLACED}>{NOT_REPLACED}</option><option value={REPLACED}>{REPLACED}</option></select>{form.status===REPLACED&&<small className="field-hint">Locked after confirmation.</small>}</label>
             <label className="field"><span>Received By</span><input value={form.receivedBy} onChange={e=>change('receivedBy',e.target.value)} placeholder="Name of receiver"/></label>
             <label className="field"><span>Received Date</span><input type="date" value={form.receivedDate} onChange={e=>change('receivedDate',e.target.value)}/></label>
           </div>

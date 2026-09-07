@@ -43,8 +43,12 @@ service cloud.firestore {
     match /retirements/{retirementId} {
       allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
       allow read: if isStaff();
+      // Replacement status is a one-way transition: once Replaced, it can never
+      // be changed back. Also reject any status value outside the two allowed values.
       allow update: if isAdmin()
-      && (resource.data.get('status', 'Not Replaced') != 'Replaced' || request.resource.data.status == 'Replaced');
+      && request.resource.data.status in ['Not Replaced', 'Replaced']
+      && (resource.data.get('status', 'Not Replaced') != 'Replaced'
+          || request.resource.data.status == 'Replaced');
     allow delete: if isAdmin();
     }
 
