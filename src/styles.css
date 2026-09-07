@@ -1655,7 +1655,10 @@ html[data-theme="pink"] .section-note{color:#a45d79!important}
 html[data-theme="pink"] .retirement-status-select{background:#fff;border-color:#ffd7e5;color:#351c28}
 html[data-theme="pink"] .retirement-status-select.replaced{background:#fff5df;border-color:#f2d49a;color:#8a5a08}
 
-/* Retirement: show Edit only when the row is hovered/focused */
-.retirement-table tbody tr .retirement-edit-action{opacity:0;visibility:hidden;transform:translateX(-3px);transition:opacity .16s ease,visibility .16s ease,transform .16s ease;pointer-events:none}
-.retirement-table tbody tr:hover .retirement-edit-action,.retirement-table tbody tr:focus-within .retirement-edit-action{opacity:1;visibility:visible;transform:translateX(0);pointer-events:auto}
-.retirement-table tbody tr .retirement-edit-action:focus{opacity:1;visibility:visible;pointer-events:auto}
+
+/* Retirement: Edit is hidden until the user hovers/focuses the row */
+.retirement-table tbody tr.retirement-clickable-row{cursor:pointer;transition:background .15s ease}
+.retirement-table tbody tr.retirement-clickable-row:hover td{background:#1b2325}
+.retirement-table tbody tr.retirement-clickable-row:focus{outline:1px solid #f5a623;outline-offset:-1px}
+.retirement-table tbody tr.retirement-clickable-row .retirement-status-cell,.retirement-table tbody tr.retirement-clickable-row .retirement-action-cell{cursor:default}
+.retirement-action-cell .danger-link{display:inline-flex;}
