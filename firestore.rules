@@ -43,7 +43,9 @@ service cloud.firestore {
     match /retirements/{retirementId} {
       allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
       allow read: if isStaff();
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin()
+      && (resource.data.get('status', 'Not Replaced') != 'Replaced' || request.resource.data.status == 'Replaced');
+    allow delete: if isAdmin();
     }
 
     match /jobOrders/{jobOrderId} {

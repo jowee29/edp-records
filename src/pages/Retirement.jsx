@@ -5,7 +5,9 @@ import { db } from '../firebase';
 import { audit, useAuth } from '../auth';
 import ConfirmModal from '../components/ConfirmModal';
 
-const blank={branchId:'',branchName:'',assetCode:'',serialNo:'',itemProduct:'',defectiveNote:'',datePurchase:'',dateRetired:'',receivedBy:'',receivedDate:''};
+const blank={branchId:'',branchName:'',assetCode:'',serialNo:'',itemProduct:'',defectiveNote:'',datePurchase:'',dateRetired:'',receivedBy:'',receivedDate:'',status:'Not Replaced'};
+const REPLACED='Replaced';
+const NOT_REPLACED='Not Replaced';
 const PAGE_SIZE=10;
 const val=x=>x===null||x===undefined?'':String(x);
 
@@ -41,8 +43,10 @@ export default function Retirement(){
   const save=async e=>{
     e.preventDefault();setSaving(true);setError('');setSaved(false);
     try{
-      const payload={...form,groupId:profile.groupId||'unassigned',updatedAt:serverTimestamp()};
+      const payload={...form,status:form.status===REPLACED?REPLACED:NOT_REPLACED,groupId:profile.groupId||'unassigned',updatedAt:serverTimestamp()};
       if(editing){
+        const existing=items.find(x=>x.id===editing);
+        if(existing?.status===REPLACED && payload.status!==REPLACED) throw new Error('This retirement record is already marked Replaced and its status can no longer be changed.');
         if(!['admin','super_admin'].includes(profile.role)) throw new Error('Only Admin or Super Admin can edit retirement records.');
         await updateDoc(doc(db,'retirements',editing),payload);
         await audit({action:'UPDATE_RETIREMENT',details:`Updated retirement record for ${form.assetCode||form.itemProduct}`,targetUserId:editing})
@@ -51,15 +55,31 @@ export default function Retirement(){
       await load();setSaved(true);reset();return true;
     }catch(e){setError(e.message);return false}finally{setSaving(false)}
   };
+  const requestStatusChange=value=>{
+    if(value===REPLACED && form.status!==REPLACED){
+      setConfirm({
+        title:'Confirm Replacement',
+        message:`Mark ${form.assetCode||form.itemProduct||'this retirement record'} as Replaced? Once confirmed, the status will be locked and cannot be changed back.`,
+        confirmLabel:'Yes, Mark Replaced',
+        danger:false,
+        onConfirm:()=>{
+          setForm(f=>({...f,status:REPLACED}));
+          setConfirm(null);
+        }
+      });
+      return;
+    }
+    if(form.status!==REPLACED) setForm(f=>({...f,status:value}));
+  };
   const edit=x=>{if(!['admin','super_admin'].includes(profile.role))return;setEditing(x.id);setForm({...blank,...x});setError('');setSaved(false);setModalOpen(true);document.body.classList.add('modal-open')};
   const exportRetirements=async()=>{
     const rows=filtered.map(x=>({
       'BRANCH NAME':val(x.branchName),'ASSET CODE':val(x.assetCode),'SERIAL NO.':val(x.serialNo),
       'ITEM PRODUCTS':val(x.itemProduct),'DEFECTIVE NOTE':val(x.defectiveNote),'DATE PURCHASE':val(x.datePurchase),
-      'DATE RETIRED':val(x.dateRetired),'RECEIVED BY':val(x.receivedBy),'RECEIVED DATE':val(x.receivedDate)
+      'DATE RETIRED':val(x.dateRetired),'RECEIVED BY':val(x.receivedBy),'RECEIVED DATE':val(x.receivedDate),'STATUS':val(x.status||NOT_REPLACED)
     }));
     const ws=XLSX.utils.json_to_sheet(rows);
-    ws['!cols']=[{wch:24},{wch:16},{wch:20},{wch:28},{wch:42},{wch:16},{wch:16},{wch:24},{wch:16}];
+    ws['!cols']=[{wch:24},{wch:16},{wch:20},{wch:28},{wch:42},{wch:16},{wch:16},{wch:24},{wch:16},{wch:16}];
     const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Retirement');
     const stamp=new Date().toISOString().slice(0,10);XLSX.writeFile(wb,`EDP_Retirement_${stamp}.xlsx`);
     try{await audit({action:'EXPORT_RETIREMENTS',details:`Exported ${rows.length} retirement records to Excel`})}catch(e){console.warn('Audit export failed',e)}
@@ -67,7 +87,7 @@ export default function Retirement(){
   const normalizeKey=x=>String(x??'').trim().toUpperCase().replace(/[._\-/]+/g,' ').replace(/\s+/g,' ');
   const toImportRow=row=>{
     const get=(...keys)=>{for(const k of keys){const target=normalizeKey(k);const found=Object.keys(row).find(h=>normalizeKey(h)===target);if(found!==undefined)return row[found]}return ''};
-    return {branchName:get('BRANCH NAME','BRANCH'),assetCode:get('ASSET CODE'),serialNo:get('SERIAL NO.','SERIAL NUMBER'),itemProduct:get('ITEM PRODUCTS','ITEM PRODUCT','PRODUCT'),defectiveNote:get('DEFECTIVE NOTE','DEFECT'),datePurchase:get('DATE PURCHASE'),dateRetired:get('DATE RETIRED'),receivedBy:get('RECEIVED BY'),receivedDate:get('RECEIVED DATE')};
+    return {branchName:get('BRANCH NAME','BRANCH'),assetCode:get('ASSET CODE'),serialNo:get('SERIAL NO.','SERIAL NUMBER'),itemProduct:get('ITEM PRODUCTS','ITEM PRODUCT','PRODUCT'),defectiveNote:get('DEFECTIVE NOTE','DEFECT'),datePurchase:get('DATE PURCHASE'),dateRetired:get('DATE RETIRED'),receivedBy:get('RECEIVED BY'),receivedDate:get('RECEIVED DATE'),status:(String(get('STATUS')||NOT_REPLACED).trim()===REPLACED?REPLACED:NOT_REPLACED)};
   };
   const handleImportFile=async e=>{
     const file=e.target.files?.[0];if(!file)return;setImportFile(file);setImportError('');setImportRows([]);
@@ -123,7 +143,7 @@ export default function Retirement(){
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="import-retirement-title">
         <div className="modal-header"><div><p className="eyebrow">BULK DATA ENTRY</p><h2 id="import-retirement-title">Import Retirement Records</h2><p className="subtext">Upload an Excel file and review the records before saving them to Firebase.</p></div><button className="modal-close" type="button" aria-label="Close" onClick={()=>setShowImport(false)}>×</button></div>
         <div className="modal-body">
-          <div className="import-help"><div className="import-help-title">Import requirements</div><p><b>Required:</b> BRANCH NAME, ASSET CODE, ITEM PRODUCTS and DATE RETIRED. The branch name must already exist in Branch Management.</p><div className="import-column-list">BRANCH NAME · ASSET CODE · SERIAL NO. · ITEM PRODUCTS · DEFECTIVE NOTE · DATE PURCHASE · DATE RETIRED · RECEIVED BY · RECEIVED DATE</div></div>
+          <div className="import-help"><div className="import-help-title">Import requirements</div><p><b>Required:</b> BRANCH NAME, ASSET CODE, ITEM PRODUCTS and DATE RETIRED. STATUS is optional and defaults to Not Replaced. The branch name must already exist in Branch Management.</p><div className="import-column-list">BRANCH NAME · ASSET CODE · SERIAL NO. · ITEM PRODUCTS · DEFECTIVE NOTE · DATE PURCHASE · DATE RETIRED · RECEIVED BY · RECEIVED DATE · STATUS</div></div>
           <label className="file-picker"><span>{importFile?importFile.name:'Choose Excel file (.xlsx/.xls)'}</span><input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={handleImportFile}/></label>
           {importError&&<div className="error">{importError}</div>}
           {importRows.length>0&&<div className="import-preview"><b>{importRows.length} record{importRows.length===1?'':'s'} ready to import.</b><div className="table-wrap"><table><thead><tr><th>BRANCH</th><th>ASSET CODE</th><th>ITEM</th><th>DATE RETIRED</th></tr></thead><tbody>{importRows.slice(0,8).map((r,i)=><tr key={i}><td>{val(r.branchName)||'—'}</td><td>{val(r.assetCode)||'—'}</td><td>{val(r.itemProduct)||'—'}</td><td>{val(r.dateRetired)||'—'}</td></tr>)}</tbody></table></div>{importRows.length>8&&<p className="muted">Showing first 8 records for preview.</p>}</div>}
@@ -144,6 +164,7 @@ export default function Retirement(){
             <label className="field span-2"><span>Defective Note</span><textarea value={form.defectiveNote} onChange={e=>change('defectiveNote',e.target.value)} rows="2" placeholder="Describe the defect, damage, or reason for retirement..."/></label>
             <label className="field"><span>Date Purchase</span><input type="date" value={form.datePurchase} onChange={e=>change('datePurchase',e.target.value)}/></label>
             <label className="field"><span>Date Retired</span><input type="date" value={form.dateRetired} onChange={e=>change('dateRetired',e.target.value)} required/></label>
+            <label className="field"><span>Replacement Status</span><select value={form.status||NOT_REPLACED} onChange={e=>requestStatusChange(e.target.value)} disabled={form.status===REPLACED}><option value={NOT_REPLACED}>{NOT_REPLACED}</option><option value={REPLACED}>{REPLACED}</option></select>{form.status===REPLACED&&<small className="field-hint">Locked after confirmation.</small>}</label>
             <label className="field"><span>Received By</span><input value={form.receivedBy} onChange={e=>change('receivedBy',e.target.value)} placeholder="Name of receiver"/></label>
             <label className="field"><span>Received Date</span><input type="date" value={form.receivedDate} onChange={e=>change('receivedDate',e.target.value)}/></label>
           </div>
@@ -154,8 +175,8 @@ export default function Retirement(){
 
     <div className="toolbar-row no-print"><div className="search-wrap"><span>⌕</span><input placeholder="Search branch, asset code, serial no., product..." value={search} onChange={e=>setSearch(e.target.value)}/></div><span className="count-label">{filtered.length} record{filtered.length===1?'':'s'}</span></div>
     <div className="content-card table-wrap retirement-table">
-      <table><thead><tr>{['admin','super_admin'].includes(profile.role)&&<th>ACTION</th>}<th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th></tr></thead>
-      <tbody>{loading?<tr><td colSpan={['admin','super_admin'].includes(profile.role)?10:9} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}>{['admin','super_admin'].includes(profile.role)&&<td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td>}<td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td></tr>):<tr><td colSpan={['admin','super_admin'].includes(profile.role)?10:9} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
+      <table><thead><tr>{['admin','super_admin'].includes(profile.role)&&<th>ACTION</th>}<th>BRANCH NAME</th><th>ASSET CODE</th><th>SERIAL NO.</th><th>ITEM PRODUCTS</th><th>DEFECTIVE NOTE</th><th>DATE PURCHASE</th><th>DATE RETIRED</th><th>RECEIVED BY</th><th>RECEIVED DATE</th><th>STATUS</th></tr></thead>
+      <tbody>{loading?<tr><td colSpan={['admin','super_admin'].includes(profile.role)?11:10} className="empty-state">Loading...</td></tr>:shown.length?shown.map(x=><tr key={x.id}>{['admin','super_admin'].includes(profile.role)&&<td><div className="actions"><button className="link-btn" onClick={()=>edit(x)}>Edit</button><button className="link-btn danger-link" onClick={()=>remove(x)}>Delete</button></div></td>}<td><b>{val(x.branchName)||'—'}</b></td><td><span className="retired-pill">{val(x.assetCode)||'—'}</span></td><td>{val(x.serialNo)||'—'}</td><td>{val(x.itemProduct)||'—'}</td><td className="retirement-note">{val(x.defectiveNote)||'—'}</td><td>{val(x.datePurchase)||'—'}</td><td>{val(x.dateRetired)||'—'}</td><td>{val(x.receivedBy)||'—'}</td><td>{val(x.receivedDate)||'—'}</td><td><span className={`replacement-status-pill ${(x.status||NOT_REPLACED).toLowerCase().replace(/\s+/g,'-')}`}>{val(x.status||NOT_REPLACED)}</span></td></tr>):<tr><td colSpan={['admin','super_admin'].includes(profile.role)?11:10} className="empty-state">No retirement records found.</td></tr>}</tbody></table>
       {!loading&&filtered.length>0&&(()=>{
         const pages=[];
         const addPage=p=>pages.push(p);
