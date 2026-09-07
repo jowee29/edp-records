@@ -58,9 +58,9 @@ export default function Retirement(){
   const requestStatusChange=value=>{
     if(value===REPLACED && form.status!==REPLACED){
       setConfirm({
-        title:'Confirm Replacement',
-        message:`Mark ${form.assetCode||form.itemProduct||'this retirement record'} as Replaced? Once confirmed, the status will be locked and cannot be changed back.`,
-        confirmLabel:'Yes, Mark Replaced',
+        title:'Confirm Replacement Status',
+        message:`You are about to mark ${form.assetCode||form.itemProduct||'this retirement record'} as Replaced.\n\nOnce confirmed, this status will be locked and cannot be changed back to Not Replaced.`,
+        confirmLabel:'Confirm & Lock',
         danger:false,
         onConfirm:()=>{
           setForm(f=>({...f,status:REPLACED}));

@@ -13,7 +13,7 @@ export default function ConfirmModal({
 
   return (
     <div
-      className="modal-backdrop"
+      className="modal-backdrop confirm-modal-backdrop"
       role="presentation"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !saving) onCancel();
@@ -33,7 +33,7 @@ export default function ConfirmModal({
           <button className="modal-close" type="button" disabled={saving} onClick={onCancel} aria-label="Close">×</button>
         </div>
         <div className="modal-body">
-          <div className={`confirm-icon ${danger ? 'confirm-icon-danger' : ''}`}>{danger ? '!' : '?'}</div>
+          <div className={`confirm-icon ${danger ? 'confirm-icon-danger' : 'confirm-icon-warning'}`} aria-hidden="true">{danger ? '!' : '✓'}</div>
           <p className="confirm-message">{message}</p>
         </div>
         <div className="modal-footer">
