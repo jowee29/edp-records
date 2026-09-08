@@ -1,6 +1,8 @@
 import edpLogo from './assets/edp-logo.png';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from './firebase';
 import { useAuth, audit } from './auth';
 import { Login, ForgotPassword } from './pages/Auth';
 import Dashboard from './pages/Dashboard';
@@ -14,6 +16,7 @@ import Groups from './pages/Groups';
 import Retirement from './pages/Retirement';
 import PartsInventory from './pages/PartsInventory';
 import UsedParts from './pages/UsedParts';
+import BorrowedParts from './pages/BorrowedParts';
 import JobOrder from './pages/JobOrder';
 import JobDone from './pages/JobDone';
 
@@ -47,6 +50,43 @@ const Icon=({name})=>{
   return <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>
 };
 
+function useNewRecordBadges(profile){
+  const [records,setRecords]=useState({branches:[],jobOrders:[],jobDone:[],retirements:[],partsInventory:[],usedParts:[],borrowedParts:[]});
+  const [seen,setSeen]=useState(()=>{try{return JSON.parse(localStorage.getItem('edp-nav-seen')||'{}')}catch{return {}}});
+  const [initialized,setInitialized]=useState(()=>{try{return localStorage.getItem('edp-nav-seen-initialized')==='1'}catch{return false}});
+  useEffect(()=>{
+    if(!profile)return;
+    const unsubs=[];
+    const configs=[['branches','branches'],['jobOrders','jobOrders'],['jobDone','jobDone'],['retirements','retirements'],['partsInventory','partsInventory'],['usedParts','usedParts'],['borrowedParts','borrowedParts']];
+    configs.forEach(([key,field])=>{
+      unsubs.push(onSnapshot(collection(db,field),snap=>{
+        const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+        setRecords(prev=>({...prev,[key]:rows}));
+        if(!initialized && !localStorage.getItem('edp-nav-seen')){
+          const latest=rows.reduce((m,x)=>Math.max(m,x.createdAt?.toMillis?.() ?? (x.createdAt?.seconds ? x.createdAt.seconds*1000 : 0)),0);
+          if(latest){setSeen(prev=>({...prev,[key]:latest}));}
+        }
+      },()=>{}));
+    });
+    if(!initialized && unsubs.length){localStorage.setItem('edp-nav-seen-initialized','1');setInitialized(true);}
+    return()=>unsubs.forEach(u=>u());
+  },[profile]);
+  const isVisible=useMemo(()=>x=>profile?.role==='super_admin'||!profile?.groupId||String(x.groupId||'')===String(profile.groupId),[profile]);
+  const counts={};
+  Object.entries(records).forEach(([key,list])=>{
+    const last=Number(seen[key]||0);
+    counts[key]=list.filter(x=>isVisible(x)).filter(x=>{
+      const t=x.createdAt?.toMillis?.() ?? (x.createdAt?.seconds ? x.createdAt.seconds*1000 : 0);
+      return t>last;
+    }).length;
+  });
+  const markSeen=key=>{
+    const next={...seen,[key]:Date.now()};
+    setSeen(next);localStorage.setItem('edp-nav-seen',JSON.stringify(next));
+  };
+  return {counts,markSeen};
+}
+
 function Layout({children}){
   const {profile,logout}=useAuth();
   const navigate=useNavigate();
@@ -68,21 +108,23 @@ function Layout({children}){
   const nav=async()=>{await audit({action:'LOGOUT',details:'User logged out'});await logout();navigate('/login')};
   const role=profile?.role||'employee';
   const roleLabel=role.replace('_',' ').toUpperCase();
+  const {counts,markSeen}=useNewRecordBadges(profile);
   const isSuperAdmin=role==='super_admin';
   const navGroups=[
     {label:'OVERVIEW',items:[
       {to:'/dashboard',label:'Dashboard',icon:'grid'}
     ]},
     {label:'OPERATIONS',items:[
-      {to:'/branches',label:'Branches',icon:'branch'},
-      {to:'/job-order',label:'Job Order',icon:'joborder'},
-      {to:'/job-done',label:'Job Done',icon:'jobdone'},
+      {to:'/branches',label:'Branches',icon:'branch',badgeKey:'branches'},
+      {to:'/job-order',label:'Job Order',icon:'joborder',badgeKey:'jobOrders'},
+      {to:'/job-done',label:'Job Done',icon:'jobdone',badgeKey:'jobDone'},
       {to:'/accomplishment',label:'Accomplishment',icon:'history'},
-      {to:'/retirement',label:'Retirement',icon:'retirement'}
+      {to:'/retirement',label:'Retirement',icon:'retirement',badgeKey:'retirements'}
     ]},
     {label:'INVENTORY',items: isSuperAdmin ? [
-      {to:'/parts-inventory',label:'Parts Inventory',icon:'inventory'},
-      {to:'/used-parts',label:'Used Parts',icon:'used'}
+      {to:'/parts-inventory',label:'Parts Inventory',icon:'inventory',badgeKey:'partsInventory'},
+      {to:'/used-parts',label:'Used Parts',icon:'used',badgeKey:'usedParts'},
+      {to:'/borrowed-parts',label:'Borrowed Parts',icon:'used',badgeKey:'borrowedParts'}
     ] : []},
     {label:'ADMINISTRATION',items: isSuperAdmin ? [
       {to:'/users',label:'User Management',icon:'users'},
@@ -105,8 +147,8 @@ function Layout({children}){
         {navGroups.map(group=><div className="sidebar-group" key={group.label}>
           <span className="sidebar-label">{group.label}</span>
           <nav className="side-nav">
-            {group.items.map(item=><NavLink key={item.to} to={item.to} onClick={()=>setMobileMenuOpen(false)} className={({isActive})=>`side-link ${isActive?'active':''}`}>
-              <Icon name={item.icon}/><span>{item.label}</span>
+            {group.items.map(item=><NavLink key={item.to} to={item.to} onClick={()=>{setMobileMenuOpen(false);if(item.badgeKey)markSeen(item.badgeKey)}} className={({isActive})=>`side-link ${isActive?'active':''}`}>
+              <Icon name={item.icon}/><span className="side-link-label">{item.label}</span>{item.badgeKey&&counts[item.badgeKey]>0&&<span className="nav-badge" title={`${counts[item.badgeKey]} new`}>{counts[item.badgeKey]>99?'99+':counts[item.badgeKey]}</span>}
             </NavLink>)}
           </nav>
         </div>)}
@@ -150,6 +192,7 @@ export default function App(){
     <Route path="/job-done" element={<Protected roles={['admin','employee','super_admin']}><Layout><JobDone/></Layout></Protected>}/>
     <Route path="/parts-inventory" element={<Protected roles={['super_admin']}><Layout><PartsInventory/></Layout></Protected>}/>
     <Route path="/used-parts" element={<Protected roles={['super_admin']}><Layout><UsedParts/></Layout></Protected>}/>
+    <Route path="/borrowed-parts" element={<Protected roles={['super_admin']}><Layout><BorrowedParts/></Layout></Protected>}/>
     <Route path="/audit-logs" element={<Protected roles={['super_admin']}><Layout><AuditLogs/></Layout></Protected>}/>
     <Route path="/profile" element={<Protected><Layout><Profile/></Layout></Protected>}/>
     <Route path="*" element={<Navigate to={user?'/dashboard':'/login'} replace/>}/>

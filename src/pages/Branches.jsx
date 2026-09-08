@@ -272,14 +272,13 @@ export default function Branches(){
       </div>
     </div>
 
-    <div className="branch-list-head"><div><strong>Branch Records</strong><span>{filtered.length} shown of {branches.length}</span></div><span className="branch-list-note">Use View for complete connectivity details.</span></div>
+    <div className="branch-list-head"><div><strong>Branch Records</strong><span>{filtered.length} shown of {branches.length}</span></div><span className="branch-list-note">Click a branch row to view complete information.</span></div>
     <div className="content-card table-wrap branch-table">
-      <table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NUMBER</th><th>ACTIONS</th></tr></thead>
-        <tbody>{paginated.map(b=><tr key={b.id}>
+      <table><thead><tr><th>BRANCH NAME</th><th>TYPE</th><th>COMPANY</th><th>ACCOUNT NUMBER</th></tr></thead>
+        <tbody>{paginated.map(b=><tr key={b.id} className="branch-row-clickable" onClick={()=>setViewing(b)} title="Click to view branch information">
           <td><div className="branch-name-cell"><b>{b.branchName||'—'}</b></div></td>
           <td><span className={`branch-type-badge ${String(b.branchType||'').toLowerCase().replace(/\s+/g,'-')}`}>{b.branchType||'—'}</span></td>
           <td>{b.company||'—'}</td><td>{b.accountNo||'—'}</td>
-          <td><div className="actions"><button className="link-btn view-link" type="button" onClick={()=>setViewing(b)}>View</button><button className="link-btn" type="button" onClick={()=>openEdit(b)}>Edit</button><button className="link-btn danger-link" type="button" onClick={()=>remove(b)}>Delete</button></div></td>
         </tr>)}</tbody>
       </table>
       {!loading&&filtered.length>0&&<div className="branch-pagination">
@@ -312,7 +311,7 @@ export default function Branches(){
         <div className="modal-header branch-details-header"><div><p className="eyebrow">BRANCH RECORD</p><div className="details-title-row"><h2 id="branch-details-title">{viewing.branchName||'Branch Details'}</h2><span className={`branch-type-badge ${String(viewing.branchType||'').toLowerCase().replace(/\s+/g,'-')}`}>{viewing.branchType||'—'}</span></div><p className="subtext">Complete branch, contact, connectivity, and equipment information.</p></div><button className="modal-close" type="button" aria-label="Close" onClick={()=>setViewing(null)}>×</button></div>
         <div className="modal-body"><div className="details-grid">
           {detailSections.map(section=><div className="details-section" key={section.title}><div className="details-section-title">{section.title}</div><div className="details-items">{section.fields.map(([label,key])=>{const raw=viewing[key];const value=key==='monthlyPayment'&&raw!==''&&raw!=null?`₱${Number(raw).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`:(raw||'—');return <div className={`detail-item ${key==='address'?'detail-wide':''}`} key={label}><span>{label}</span><strong>{value}</strong></div>})}</div></div>)}
-        </div><div className="details-actions"><button className="ghost-btn" type="button" onClick={()=>setViewing(null)}>Close</button><button className="amber-btn" type="button" onClick={()=>{const b=viewing;setViewing(null);openEdit(b)}}>Edit Branch</button></div></div>
+        </div><div className="details-actions"><button className="ghost-btn" type="button" onClick={()=>setViewing(null)}>Close</button><button className="danger-btn" type="button" onClick={()=>{const b=viewing;setViewing(null);remove(b)}}>Delete Branch</button><button className="amber-btn" type="button" onClick={()=>{const b=viewing;setViewing(null);openEdit(b)}}>Update Branch</button></div></div>
       </div>
     </div>}
 

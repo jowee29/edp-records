@@ -82,6 +82,10 @@ service cloud.firestore {
       allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
     }
 
+    match /borrowedParts/{borrowedPartId} {
+      allow read, create, update, delete: if isSuperAdmin();
+    }
+
 
     match /activeSessions/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;

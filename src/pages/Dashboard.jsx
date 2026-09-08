@@ -13,7 +13,7 @@ const Action=({to,title,text,icon,accent})=><NavLink to={to} className={`action-
 
 export default function Dashboard(){
  const {profile}=useAuth();
- const [stats,setStats]=useState({users:0,employees:0,admins:0,active:0,branches:0,accomplishments:0});
+ const [stats,setStats]=useState({users:0,employees:0,admins:0,active:0,branches:0,jobOrders:0,jobDone:0,retirements:0,partsInventory:0,usedParts:0,accomplishments:0});
  const [recent,setRecent]=useState([]);
  const role=profile?.role||'employee';
  useEffect(()=>{
@@ -21,16 +21,24 @@ export default function Dashboard(){
    (async()=>{
      try{
        if(role==='employee')return;
-       const reads=[getDocs(collection(db,'users')),getDocs(collection(db,'branches'))];
+       const reads=[
+         getDocs(collection(db,'users')),
+         getDocs(collection(db,'branches')),
+         getDocs(collection(db,'jobOrders')),
+         getDocs(collection(db,'jobDone')),
+         getDocs(collection(db,'retirements')),
+         getDocs(collection(db,'partsInventory')),
+         getDocs(collection(db,'usedParts'))
+       ];
        if(role==='super_admin') reads.push(getDocs(collection(db,'auditLogs')));
        const results=await Promise.all(reads);
-       const us=results[0], bs=results[1], logs=results[2];
+       const [us,bs,jo,jd,ret,inv,used,logs]=results;
        let employees=0,admins=0,active=0;
        us.forEach(d=>{const x=d.data(); if(x.role==='employee')employees++; if(x.role==='admin')admins++; if((x.status||'active')==='active')active++});
        const rows=[];
        logs?.forEach(d=>{const x=d.data(); rows.push({id:d.id,action:x.action||'System activity',details:x.details||'',createdAt:x.createdAt?.toDate?.()||null})});
        rows.sort((a,b)=>(b.createdAt?.getTime?.()||0)-(a.createdAt?.getTime?.()||0));
-       if(alive)setStats({users:us.size,employees,admins,active,branches:bs.size,accomplishments:0}),setRecent(rows.slice(0,5));
+       if(alive)setStats({users:us.size,employees,admins,active,branches:bs.size,jobOrders:jo.size,jobDone:jd.size,retirements:ret.size,partsInventory:inv.size,usedParts:used.size,accomplishments:0}),setRecent(rows.slice(0,5));
      }catch(err){console.error('Dashboard stats:',err)}
    })();
    return()=>{alive=false};
@@ -62,19 +70,36 @@ export default function Dashboard(){
 
    <div className="stats-grid premium-stats-grid">
      <Stat label="Total Branches" value={stats.branches} caption="OPERATIONS" icon="⌂" trend="Live"/>
+     <Stat label="Job Orders" value={stats.jobOrders} caption="SERVICE" icon="▤" trend="Records"/>
+     <Stat label="Job Done" value={stats.jobDone} caption="COMPLETED" icon="✓" trend="Records"/>
+     <Stat label="Retirements" value={stats.retirements} caption="ASSETS" icon="▣" trend="Records"/>
+     <Stat label="Parts Inventory" value={stats.partsInventory} caption="INVENTORY" icon="▥" trend="Items"/>
+     <Stat label="Used Parts" value={stats.usedParts} caption="INVENTORY" icon="↳" trend="Records"/>
      <Stat label="Total Users" value={stats.users} caption="DIRECTORY" icon="◎" trend="Accounts"/>
-     <Stat label="Admin Accounts" value={stats.admins} caption="PRIVILEGED" icon="◆" trend="Access"/>
      <Stat label="Active Accounts" value={stats.active} caption="SECURITY" icon="✓" trend="Healthy"/>
+   </div>
+
+   <div className="dashboard-module-strip">
+     <NavLink to="/job-order" className="module-mini"><span>JOB ORDERS</span><strong>{stats.jobOrders}</strong><small>Service requests</small></NavLink>
+     <NavLink to="/job-done" className="module-mini"><span>JOB DONE</span><strong>{stats.jobDone}</strong><small>Completed jobs</small></NavLink>
+     <NavLink to="/retirement" className="module-mini"><span>RETIREMENT</span><strong>{stats.retirements}</strong><small>Asset records</small></NavLink>
+     <NavLink to="/parts-inventory" className="module-mini"><span>PARTS INVENTORY</span><strong>{stats.partsInventory}</strong><small>Inventory items</small></NavLink>
+     <NavLink to="/used-parts" className="module-mini"><span>USED PARTS</span><strong>{stats.usedParts}</strong><small>Parts used</small></NavLink>
    </div>
 
    <div className="premium-grid">
      <div className="premium-main">
-       <div className="section-heading premium-heading"><div><span>COMMAND CENTER</span><h2>Quick actions</h2></div><span className="section-note">4 modules</span></div>
+       <div className="section-heading premium-heading"><div><span>COMMAND CENTER</span><h2>Quick actions</h2></div><span className="section-note">8 modules</span></div>
        <div className="action-grid premium-actions">
          <Action to="/users" title="User Management" text="Control accounts, roles and access status." icon="◎" accent/>
          <Action to="/branches" title="Branch Management" text="Manage branch records and connectivity details." icon="⌂"/>
          <Action to="/accomplishment" title="New Accomplishment" text="Create and print a professional A4 visit form." icon="＋"/>
          <Action to="/accomplishment" title="Accomplishment" text="Review and print completed branch visits." icon="↻"/>
+         <Action to="/job-order" title="Job Order" text="Monitor and manage service requests." icon="▤"/>
+         <Action to="/job-done" title="Job Done" text="Review repaired jobs and receiving status." icon="✓"/>
+         <Action to="/retirement" title="Retirement" text="Manage retired and replaced assets." icon="▣"/>
+         <Action to="/parts-inventory" title="Parts Inventory" text="Manage available parts and quantities." icon="▥"/>
+         <Action to="/used-parts" title="Used Parts" text="Track parts consumed in service work." icon="↳"/>
        </div>
 
        <div className="overview-card">

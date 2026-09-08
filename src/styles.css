@@ -832,6 +832,8 @@ html[data-theme="pink"],html[data-theme="pink"] body{background:#fff7fb;color:#3
 .theme-pink .amber-btn{background:#ec4f91;border-color:#ec4f91;color:#fff}
 .theme-pink .amber-btn:hover{background:#d92f78;border-color:#d92f78}
 .theme-pink .small-btn,.theme-pink .history-page-btn{background:#fff0f6;border-color:#f3bfd2;color:#8e4f6a}
+/* Branch Management - keep TYPE badge text white in Pink Mode */
+.theme-pink .branch-type-badge,.theme-pink .branch-type-badge.full,.theme-pink .branch-type-badge.sales-office{color:#fff!important}
 .theme-pink .history-page-btn.active{background:#ec4f91;border-color:#ec4f91;color:#fff}
 .theme-pink .history-pagination{background:#fff;border-color:#ffd7e5}
 .theme-pink .history-page-info{color:#9c6b7e}
@@ -1675,3 +1677,108 @@ html[data-theme="pink"] .retirement-status-select.replaced{background:#fff5df;bo
 .retirement-table tbody tr.retirement-clickable-row:focus{outline:1px solid #f5a623;outline-offset:-1px}
 .retirement-table tbody tr.retirement-clickable-row .retirement-status-cell,.retirement-table tbody tr.retirement-clickable-row .retirement-action-cell{cursor:default}
 .retirement-action-cell .danger-link{display:inline-flex;}
+
+/* Branch row interaction: actions are intentionally handled inside the View Info modal. */
+.branch-row-clickable{cursor:pointer;transition:background .15s ease}
+.branch-row-clickable:hover{background:#20292c!important}
+.branch-row-clickable:focus-within{outline:1px solid #f5a623;outline-offset:-1px}
+.branch-row-clickable td{user-select:none}
+.danger-btn{border:1px solid #6b3730;background:#291c19;color:#df8a78;border-radius:6px;padding:10px 15px;font-size:12px;font-weight:900}
+.danger-btn:hover{border-color:#d87961;background:#35211d;color:#f0a08f}
+.details-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+@media(max-width:620px){.details-actions{justify-content:stretch;flex-wrap:wrap}.details-actions button{flex:1}}
+
+/* =========================================================
+   PINK MODE — FIX WHITE TEXT ON LIGHT PINK SURFACES
+   ========================================================= */
+html[data-theme="pink"] .content-card,
+html[data-theme="pink"] .content-card *:not(.amber-btn):not(.role-chip),
+html[data-theme="pink"] .branch-modal,
+html[data-theme="pink"] .branch-modal *:not(.amber-btn):not(.role-chip),
+html[data-theme="pink"] .retirement-modal,
+html[data-theme="pink"] .retirement-modal *:not(.amber-btn):not(.role-chip),
+html[data-theme="pink"] .dark-card,
+html[data-theme="pink"] .dark-card *:not(.amber-btn):not(.role-chip),
+html[data-theme="pink"] .action-card,
+html[data-theme="pink"] .action-card *:not(.amber-btn):not(.role-chip),
+html[data-theme="pink"] .system-card,
+html[data-theme="pink"] .system-card *:not(.amber-btn):not(.role-chip),
+html[data-theme="pink"] .profile-summary,
+html[data-theme="pink"] .profile-summary *:not(.amber-btn):not(.role-chip){
+  color:#5a1030;
+}
+
+html[data-theme="pink"] .content-card p,
+html[data-theme="pink"] .content-card span,
+html[data-theme="pink"] .content-card label,
+html[data-theme="pink"] .content-card b,
+html[data-theme="pink"] .content-card strong,
+html[data-theme="pink"] .content-card small,
+html[data-theme="pink"] .modal-body p,
+html[data-theme="pink"] .modal-body span,
+html[data-theme="pink"] .modal-body label,
+html[data-theme="pink"] .modal-body b,
+html[data-theme="pink"] .modal-body strong,
+html[data-theme="pink"] .modal-body small{
+  color:#5a1030;
+}
+
+html[data-theme="pink"] .modal-title,
+html[data-theme="pink"] .modal-header h2,
+html[data-theme="pink"] .modal-header h3,
+html[data-theme="pink"] .modal-head h2,
+html[data-theme="pink"] .modal-head h3{
+  color:#6b123b!important;
+}
+
+html[data-theme="pink"] .table-wrap td,
+html[data-theme="pink"] .table-wrap th,
+html[data-theme="pink"] .table-wrap td *{
+  color:#6b123b!important;
+}
+
+html[data-theme="pink"] .table-wrap th{font-weight:900}
+html[data-theme="pink"] .table-wrap .name-cell b{color:#5a1030!important}
+html[data-theme="pink"] .table-wrap .name-cell small{color:#a95778!important}
+
+html[data-theme="pink"] .modal-body input,
+html[data-theme="pink"] .modal-body select,
+html[data-theme="pink"] .modal-body textarea{
+  color:#5a1030!important;
+}
+
+/* Do not affect the white printable Letter document. */
+html[data-theme="pink"] .letter-accomplishment-paper,
+html[data-theme="pink"] .letter-accomplishment-paper *{color:inherit!important}
+html[data-theme="pink"] .letter-accomplishment-paper{color:#111!important}
+
+/* New record notification badges in the sidebar */
+.side-link { position: relative; }
+.side-link-label { min-width: 0; }
+.nav-badge {
+  margin-left: auto;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: .02em;
+  background: #e11d48;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.08);
+}
+[data-theme="pink"] .nav-badge { color: #fff; background: #9f1239; box-shadow: 0 0 0 2px rgba(159,18,57,.12); }
+
+/* Super Admin dashboard module summary */
+.dashboard-module-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:0 0 22px}
+.module-mini{display:flex;flex-direction:column;gap:4px;padding:18px;border:1px solid var(--border-color,rgba(255,255,255,.1));border-radius:16px;background:var(--card-bg,rgba(255,255,255,.04));text-decoration:none;color:inherit;transition:.2s ease}
+.module-mini:hover{transform:translateY(-2px);border-color:rgba(236,72,153,.45)}
+.module-mini span{font-size:10px;font-weight:800;letter-spacing:.12em;opacity:.7}.module-mini strong{font-size:28px;line-height:1.1}.module-mini small{opacity:.65}
+@media(max-width:1100px){.dashboard-module-strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.dashboard-module-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
