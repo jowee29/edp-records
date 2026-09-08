@@ -92,6 +92,7 @@ function Layout({children}){
   const navigate=useNavigate();
   const [theme,setTheme]=useState(()=>localStorage.getItem('edp-theme')||'dark');
   const [mobileMenuOpen,setMobileMenuOpen]=useState(false);
+  const [sidebarHidden,setSidebarHidden]=useState(()=>localStorage.getItem('edp-sidebar-hidden')==='1');
   useEffect(()=>{
     localStorage.setItem('edp-theme',theme);
     document.documentElement.setAttribute('data-theme',theme);
@@ -107,6 +108,7 @@ function Layout({children}){
   },[mobileMenuOpen]);
   const nav=async()=>{await audit({action:'LOGOUT',details:'User logged out'});await logout();navigate('/login')};
   const role=profile?.role||'employee';
+  useEffect(()=>{localStorage.setItem('edp-sidebar-hidden',sidebarHidden?'1':'0')},[sidebarHidden]);
   const roleLabel=role.replace('_',' ').toUpperCase();
   const {counts,markSeen}=useNewRecordBadges(profile);
   const isSuperAdmin=role==='super_admin';
@@ -134,11 +136,12 @@ function Layout({children}){
   ].filter(g=>g.items.length>0);
   return <div className={`app-shell theme-${theme} ${mobileMenuOpen?'mobile-menu-visible':''}`}>
     {mobileMenuOpen && <button className="mobile-menu-backdrop" aria-label="Close menu" onClick={()=>setMobileMenuOpen(false)}/>}
-    <aside className={`sidebar ${mobileMenuOpen?'open':''}`}>
+    <aside className={`sidebar ${mobileMenuOpen?'open':''} ${sidebarHidden?'user-hidden':''}`}>
       <div className="sidebar-brand">
         <img src={edpLogo} alt="EDP"/>
         <div><strong>EDP Records</strong><span>MANAGEMENT SYSTEM</span></div>
       </div>
+      <button className="sidebar-toggle-btn" type="button" onClick={()=>setSidebarHidden(v=>!v)} title={sidebarHidden?'Show menu':'Hide menu'} aria-label={sidebarHidden?'Show menu':'Hide menu'}>{sidebarHidden?'☰':'‹'} <span>{sidebarHidden?'Show Menu':'Hide Menu'}</span></button>
       <div className="theme-switcher">
         <button className={`theme-btn ${theme==='dark'?'active':''}`} onClick={()=>setTheme('dark')} title="Dark Mode">☾ <span>Dark</span></button>
         <button className={`theme-btn ${theme==='pink'?'active':''}`} onClick={()=>setTheme('pink')} title="Pink Mode">♡ <span>Pink</span></button>
@@ -163,6 +166,7 @@ function Layout({children}){
         <button className="logout-link" onClick={nav}><Icon name="logout"/><span>Log Out</span></button>
       </div>
     </aside>
+    <button className={`desktop-menu-toggle ${sidebarHidden?'visible':''}`} type="button" onClick={()=>setSidebarHidden(false)} aria-label="Show menu" title="Show menu">☰</button>
     <div className="main-shell">
       <header className="mobile-topbar">
         <button className="mobile-menu-btn" type="button" aria-label={mobileMenuOpen?'Close menu':'Open menu'} aria-expanded={mobileMenuOpen} onClick={()=>setMobileMenuOpen(v=>!v)}>
