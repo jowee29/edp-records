@@ -42,3 +42,7 @@ Super Admin can now use **Import Branches** in the Branches tab to import `.xlsx
 - Read-only View Branch Details modal with all stored fields.
 - Duplicate branch-name protection on manual entry and Excel/CSV import.
 - Backward-compatible Firestore loading when older branch records do not have `createdAt`.
+
+
+### NOT DR Branch DR Report
+Used Parts now has a **Print DR (NOT DR)** action that groups all NOT DR records by Branch, combines identical Item Codes, computes quantity and price x quantity, and uses the `public/PRINT DR.xlsx` template.

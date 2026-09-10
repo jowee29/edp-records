@@ -87,7 +87,7 @@ export default function BorrowedParts(){
    const invSnaps=new Map();
    for(const r of rows){if(!r.inventoryId)continue;const ir=doc(db,'partsInventory',r.inventoryId);const is=await tx.get(ir);if(!is.exists())throw new Error('May inventory item na wala na. I-refresh ang page.');invSnaps.set(r.inventoryId,{ref:ir,data:is.data(),qty:Number(is.data()?.quantity)||0});}
    for(const r of rows){const add=r.returnedQty;if(add){const inv=invSnaps.get(r.inventoryId);tx.update(inv.ref,{quantity:inv.qty+add,updatedAt:serverTimestamp()});inv.qty+=add;}}
-   for(const r of rows){for(const a of r.allocations){tx.set(doc(collection(db,'usedParts')),{itemCode:r.itemCode,description:r.description,quantity:a.quantity,branch:a.branch,date:todayLocal(),srf:'',edpStaff:profile.name||profile.username||'',assetCode:a.assetCode,serialNo:a.serialNo,status:a.status,notes:a.notes,createdBy:profile.uid,createdByName:profile.name||profile.username||'',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});}}
+   for(const r of rows){for(const a of r.allocations){tx.set(doc(collection(db,'usedParts')),{itemCode:r.itemCode,description:r.description,quantity:a.quantity,branch:a.branch,date:todayLocal(),srf:'',edpStaff:val(viewing.borrower).trim(),assetCode:a.assetCode,serialNo:a.serialNo,status:a.status,notes:a.notes,createdBy:profile.uid,createdByName:profile.name||profile.username||'',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});}}
    const finalParts=rows.map(r=>({...r,quantity:r.borrowedQty,returnedQty:r.returnedQty,usedQty:r.usedQty,allocations:r.allocations}));
    tx.update(ref,{status:'RETURNED',returnedAt:serverTimestamp(),returnDetails:finalParts,updatedAt:serverTimestamp()});
   });

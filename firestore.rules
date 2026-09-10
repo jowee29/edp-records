@@ -64,7 +64,7 @@ service cloud.firestore {
     }
 
     match /jobOrders/{jobOrderId} {
-      allow create: if isStaff() && request.resource.data.groupId == myGroupId();
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
       allow read: if sameGroup(resource.data);
       allow update: if sameGroup(resource.data) && request.resource.data.groupId == resource.data.groupId;
       allow delete: if sameGroup(resource.data);
@@ -72,7 +72,7 @@ service cloud.firestore {
 
 
     match /jobDone/{jobDoneId} {
-      allow create: if isStaff() && request.resource.data.groupId == myGroupId();
+      allow create: if isSuperAdmin() || (isStaff() && request.resource.data.groupId == myGroupId());
       allow read: if sameGroup(resource.data);
       allow update: if sameGroup(resource.data) && request.resource.data.groupId == resource.data.groupId;
       allow delete: if isSuperAdmin();
@@ -85,7 +85,7 @@ service cloud.firestore {
       allow update: if isSuperAdmin() || (isStaff()
         && request.resource.data.quantity == resource.data.quantity - 1
         && request.resource.data.itemCode == resource.data.itemCode
-        && request.resource.data.controlSerialNo == resource.data.controlSerialNo);
+        && request.resource.data.get('controlSerialNo', '') == resource.data.get('controlSerialNo', ''));
     }
 
     match /usedParts/{usedPartId} {

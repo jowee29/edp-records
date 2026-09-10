@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, runTransaction, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { audit, useAuth } from '../auth';
@@ -145,9 +146,226 @@ export default function UsedParts(){
   const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));const safePage=Math.min(page,totalPages);const shown=filtered.slice((safePage-1)*PAGE_SIZE,safePage*PAGE_SIZE);
   useEffect(()=>setPage(1),[search,branchFilter,statusFilter]);useEffect(()=>{if(page>totalPages)setPage(totalPages)},[page,totalPages]);
   const drCount=items.filter(x=>x.status==='DR').length;
+  const printNotDRByBranch=async()=>{
+    setError('');
+    try{
+      const pending=items.filter(x=>String(x.status||'NOT DR').toUpperCase()!=='DR' && val(x.branch).trim());
+      if(!pending.length)throw new Error('Walang NOT DR na Used Parts records na maaaring i-print.');
+      const templateResponse=await fetch('/PRINT DR.xlsx');
+      if(!templateResponse.ok)throw new Error('Hindi ma-load ang PRINT DR template.');
+      const templateBuffer=await templateResponse.arrayBuffer();
+      const templateWb=XLSX.read(templateBuffer,{type:'array',cellStyles:true});
+      const templateName=templateWb.SheetNames[0];
+      const templateWs=templateWb.Sheets[templateName];
+      const branchMap=new Map();
+      pending.forEach(x=>{
+        const branch=val(x.branch).trim();
+        const key=branch.toLowerCase();
+        if(!branchMap.has(key))branchMap.set(key,{branch,rows:[]});
+        branchMap.get(key).rows.push(x);
+      });
+      const outWb=XLSX.utils.book_new();
+      const safeSheetName=(name,idx)=>{
+        const cleaned=String(name||'Branch').replace(/[\\/?*\[\]:]/g,' ').trim().slice(0,25)||'Branch';
+        return `${cleaned}-${idx}`.slice(0,31);
+      };
+
+      // Move complete template rows downward when the first item's asset list needs
+      // more than the original single detail row. This keeps every ASSET CODE/SERIAL
+      // on its own physical Excel row instead of putting multiple values in one cell.
+      const shiftRows=(ws,startRow,delta)=>{
+        if(!delta)return;
+        const oldRef=ws['!ref']||'A1:AG1000';
+        const cells={};
+        Object.keys(ws).forEach(addr=>{
+          if(addr[0]==='!')return;
+          const m=addr.match(/^(\$?[A-Z]+)(\$?\d+)$/);
+          if(!m)return;
+          const row=Number(m[2].replace('$',''));
+          if(row<startRow)return;
+          const col=m[1].replace('$','');
+          cells[`${col}${row+delta}`]=ws[addr];
+          delete ws[addr];
+        });
+        Object.entries(cells).forEach(([addr,cell])=>ws[addr]=cell);
+        if(ws['!rows']){
+          const oldRows=ws['!rows'];
+          const next=[];
+          for(let i=0;i<oldRows.length;i++){
+            const rowNum=i+1;
+            if(rowNum<startRow)next[i]=oldRows[i];
+            else next[i+delta]=oldRows[i];
+          }
+          ws['!rows']=next;
+        }
+        if(ws['!merges']){
+          ws['!merges']=ws['!merges'].map(m=>{
+            const mm={s:{...m.s},e:{...m.e}};
+            if(mm.s.r+1>=startRow)mm.s.r+=delta;
+            if(mm.e.r+1>=startRow)mm.e.r+=delta;
+            return mm;
+          });
+        }
+        // Keep the print range large enough after inserting continuation rows.
+        const refMatch=oldRef.match(/:([A-Z]+)(\d+)$/);
+        const lastRow=Math.max(Number(refMatch?.[2]||1000)+delta,1000);
+        ws['!ref']=`A1:AG${lastRow}`;
+      };
+
+      const unmerge=(ws,range)=>{
+        if(!ws['!merges'])return;
+        const [a,b]=range.split(':');
+        const parse=addr=>{const m=addr.match(/^([A-Z]+)(\d+)$/);return {c:m[1],r:Number(m[2])};};
+        const s=parse(a),e=parse(b);
+        ws['!merges']=ws['!merges'].filter(m=>!(m.s.r===s.r-1&&m.e.r===e.r-1));
+      };
+      const addMerge=(ws,range)=>{
+        const [a,b]=range.split(':');
+        const parse=addr=>{const m=addr.match(/^([A-Z]+)(\d+)$/);return {c:m[1],r:Number(m[2])};};
+        const colNum=c=>{let n=0;for(const ch of c)n=n*26+ch.charCodeAt(0)-64;return n-1;};
+        const s=parse(a),e=parse(b);
+        ws['!merges']=ws['!merges']||[];
+        if(!ws['!merges'].some(m=>m.s.r===s.r-1&&m.e.r===e.r-1&&m.s.c===colNum(s.c)&&m.e.c===colNum(e.c)))
+          ws['!merges'].push({s:{r:s.r-1,c:colNum(s.c)},e:{r:e.r-1,c:colNum(e.c)}});
+      };
+      const setCell=(ws,addr,value,type='s',alignment={})=>{
+        const old=ws[addr]||{};
+        delete old.f;
+        ws[addr]={...old,v:value,t:type};
+        if(alignment&&Object.keys(alignment).length)ws[addr].s={...(ws[addr].s||{}),alignment:{...((ws[addr].s&&ws[addr].s.alignment)||{}),...alignment}};
+      };
+      const clearCell=(ws,addr)=>setCell(ws,addr,'','s');
+      const setRowHeight=(ws,row,lines)=>{
+        ws['!rows']=ws['!rows']||[];
+        const existing=ws['!rows'][row-1]||{};
+        ws['!rows'][row-1]={...existing,hpt:Math.max(Number(existing.hpt)||0,Math.min(240,Math.max(18,lines*18)))};
+      };
+
+      let sheetIndex=0;
+      for(const group of branchMap.values()){
+        const grouped=new Map();
+        group.rows.forEach(x=>{
+          const code=val(x.itemCode).trim();
+          const inv=inventory.find(i=>i.id===x.inventoryId)
+            || inventory.find(i=>val(i.itemCode).trim().toLowerCase()===code.toLowerCase() && val(i.controlSerialNo).trim().toLowerCase()===val(x.controlSerialNo).trim().toLowerCase())
+            || inventory.find(i=>val(i.itemCode).trim().toLowerCase()===code.toLowerCase());
+          const key=code.toLowerCase();
+          if(!grouped.has(key))grouped.set(key,{itemCode:code,qty:0,description:val(inv?.description||x.description).trim(),price:Number(inv?.price||x.price)||0,assets:[]});
+          const g=grouped.get(key);
+          g.qty+=1;
+          const asset=val(x.assetCode).trim();
+          const serial=val(x.serialNo||x.assetSerialNo).trim();
+          const assetOrSerial=asset||serial;
+          if(assetOrSerial&&!g.assets.includes(assetOrSerial))g.assets.push(assetOrSerial);
+        });
+        const rows=[...grouped.values()].sort((a,b)=>a.itemCode.localeCompare(b.itemCode));
+
+        // Two item groups per sheet, but each asset/serial gets its own row.
+        // The second group is shifted down when the first group has multiple assets.
+        for(let i=0;i<rows.length;i+=2){
+          const chunk=rows.slice(i,i+2);
+          const ws=JSON.parse(JSON.stringify(templateWs));
+          ws['G9']={...(ws['G9']||{}),v:group.branch,t:'s'};
+          ws['U8']={...(ws['U8']||{}),v:new Date(),t:'d'};
+
+          // Clear the two original item groups before rebuilding them.
+          ['B14','E14','I14','I15','I16','V14','AB14','B17','E17','I17','I18','I19','V17','AB17','AB18'].forEach(a=>clearCell(ws,a));
+
+          const first=chunk[0];
+          const firstAssets=first?.assets||[];
+          const firstNextStart=17+firstAssets.length;
+          const firstDelta=Math.max(0,firstNextStart-17);
+          if(firstDelta)shiftRows(ws,17,firstDelta);
+
+          // Rebuild merge layout for continuation rows.
+          // Existing template detail merges are removed, then one merge is created
+          // for every physical ASSET CODE/SERIAL row and the final NOTHING TO FOLLOW row.
+          const removeDetailMerges=()=>{
+            ws['!merges']=(ws['!merges']||[]).filter(m=>!(m.s.c===8&&m.e.c===19&&m.s.r>=14));
+          };
+          removeDetailMerges();
+
+          let grandTotal=0;
+          let secondStart=17;
+          chunk.forEach((row,idx)=>{
+            const start=idx===0?14:secondStart;
+            // Row immediately below the item row is reserved for the *** markers.
+            const markerRow=start+1;
+            // Asset/serial rows begin below the marker row.
+            const assetStart=start+2;
+            const assets=row.assets.length?row.assets:[];
+            const total=row.price*row.qty;
+            grandTotal+=total;
+
+            setCell(ws,`B${start}`,row.itemCode,'s',{horizontal:'center',vertical:'center',wrapText:true});
+            setCell(ws,`E${start}`,row.qty,'n',{horizontal:'center',vertical:'center'});
+            setCell(ws,`I${start}`,row.description,'s',{horizontal:'center',vertical:'center',wrapText:true});
+            if(Number(row.price)>0){
+              setCell(ws,`V${start}`,row.price,'n',{horizontal:'center',vertical:'center'});
+              ws[`V${start}`].z='0.00';
+            } else {
+              clearCell(ws,`V${start}`);
+            }
+            if(Number(total)>0){
+              setCell(ws,`AB${start}`,total,'n',{horizontal:'center',vertical:'center'});
+              ws[`AB${start}`].z='0.00';
+            } else {
+              clearCell(ws,`AB${start}`);
+            }
+            addMerge(ws,`I${start}:T${start}`);
+
+            // *** must be on its own row directly below PRICE and TOTAL.
+            setCell(ws,`V${markerRow}`,'******','s',{horizontal:'center',vertical:'center'});
+            setCell(ws,`AB${markerRow}`,'******','s',{horizontal:'center',vertical:'center'});
+
+            // Every asset/serial is a separate Excel row below the marker row.
+            assets.forEach((identifier,j)=>{
+              const rr=assetStart+j;
+              setCell(ws,`I${rr}`,identifier,'s',{horizontal:'center',vertical:'center',wrapText:true});
+              addMerge(ws,`I${rr}:T${rr}`);
+              setRowHeight(ws,rr,1);
+            });
+
+            // Leave one blank row before the next Item Code group.
+            if(idx===0)secondStart=assetStart+assets.length+1;
+          });
+
+          // NOTHING TO FOLLOW is written exactly once, at the very bottom of the
+          // whole sheet/chunk, never after each Item Code.
+          const last=chunk[chunk.length-1];
+          const lastStart=chunk.length===1?14:secondStart;
+          const lastAssetCount=(last?.assets||[]).length;
+          const lastNothingRow=lastStart+2+lastAssetCount;
+          if(chunk.length>1){
+            setCell(ws,`I${lastNothingRow}`,'***********NOTHING TO FOLLOW***********','s',{horizontal:'center',vertical:'center',wrapText:true});
+            addMerge(ws,`I${lastNothingRow}:T${lastNothingRow}`);
+            setRowHeight(ws,lastNothingRow,1);
+          }
+
+          // Grand total remains in the AB column, aligned with the final item block.
+          const totalRow=lastStart;
+          if(Number(grandTotal)>0){
+            setCell(ws,`AB${totalRow}`,grandTotal,'n',{horizontal:'center',vertical:'center'});
+            ws[`AB${totalRow}`].z='0.00';
+          } else {
+            clearCell(ws,`AB${totalRow}`);
+          }
+          ws['!cols']=templateWs['!cols'];
+          ws['!margins']=templateWs['!margins'];
+          ws['!pageSetup']=templateWs['!pageSetup'];
+          ws['!printHeader']=templateWs['!printHeader'];
+          ws['!ref']='A1:AG1000';
+          XLSX.utils.book_append_sheet(outWb,ws,safeSheetName(group.branch,++sheetIndex));
+        }
+      }
+      const stamp=new Date().toISOString().slice(0,10);
+      XLSX.writeFile(outWb,`EDP_NOT_DR_BY_BRANCH_${stamp}.xlsx`);
+      await audit({action:'PRINT_NOT_DR_BY_BRANCH',details:`Generated NOT DR report using PRINT DR template for ${branchMap.size} branch(es), ${pending.length} record(s)`});
+    }catch(e){setError(e.message||'Unable to generate NOT DR report.');}
+  };
   if(profile?.role!=='super_admin')return <div className="screen-message"><div className="dark-card"><h2>Access Restricted</h2><p>Used Parts is available to Super Admin only.</p></div></div>;
   return <>
-    <div className="page-title-row parts-page-heading"><div><span className="eyebrow">PARTS INVENTORY</span><h1>Used Parts</h1><p>Record parts that have been used. Saving a record automatically deducts 1 from the selected Parts Inventory item.</p></div><div className="page-actions no-print"><button className="amber-btn" onClick={openAdd}>＋ Add Used Part</button></div></div>
+    <div className="page-title-row parts-page-heading"><div><span className="eyebrow">PARTS INVENTORY</span><h1>Used Parts</h1><p>Record parts that have been used. Saving a record automatically deducts 1 from the selected Parts Inventory item.</p></div><div className="page-actions no-print"><button className="ghost-btn" onClick={printNotDRByBranch}>⇩ Print DR (NOT DR)</button><button className="amber-btn" onClick={openAdd}>＋ Add Used Part</button></div></div>
     {error&&<div className="error no-print">{error}</div>}
     <div className="parts-stat-grid"><div className="parts-stat-card"><span>TOTAL USED PARTS</span><strong>{items.length}</strong></div><div className="parts-stat-card"><span>DR</span><strong>{drCount}</strong></div><div className="parts-stat-card"><span>NOT DR</span><strong>{items.length-drCount}</strong></div><div className="parts-stat-card"><span>BRANCHES</span><strong>{branches.length}</strong></div></div>
     <div className="content-card parts-toolbar"><div className="search-wrap"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search item code, serial no., SRF, staff..."/></div><select value={branchFilter} onChange={e=>setBranchFilter(e.target.value)}><option value="ALL">All Branches</option>{branches.map(b=><option key={b} value={b}>{b}</option>)}</select><select value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="ALL">All Status</option><option value="DR">DR</option><option value="NOT DR">NOT DR</option></select></div>
