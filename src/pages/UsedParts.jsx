@@ -152,7 +152,7 @@ export default function UsedParts(){
       const pending=items.filter(x=>String(x.status||'NOT DR').toUpperCase()!=='DR' && val(x.branch).trim());
       if(!pending.length)throw new Error('Walang NOT DR na Used Parts records na maaaring i-print.');
       const templateResponse=await fetch('/PRINT DR.xlsx');
-      if(!templateResponse.ok)throw new Error('Hindi ma-load ang PRINT DR template.');
+      if(!templateResponse.ok)throw new Error('Hindi ma-load ang DR print template.');
       const templateBuffer=await templateResponse.arrayBuffer();
       const templateWb=XLSX.read(templateBuffer,{type:'array',cellStyles:true});
       const templateName=templateWb.SheetNames[0];
@@ -166,80 +166,30 @@ export default function UsedParts(){
       });
       const outWb=XLSX.utils.book_new();
       const safeSheetName=(name,idx)=>{
-        const cleaned=String(name||'Branch').replace(/[\\/?*\[\]:]/g,' ').trim().slice(0,25)||'Branch';
+        const cleaned=String(name||'Branch').replace(/[\\/?*\\[\\]:]/g,' ').trim().slice(0,25)||'Branch';
         return `${cleaned}-${idx}`.slice(0,31);
       };
-
-      // Move complete template rows downward when the first item's asset list needs
-      // more than the original single detail row. This keeps every ASSET CODE/SERIAL
-      // on its own physical Excel row instead of putting multiple values in one cell.
-      const shiftRows=(ws,startRow,delta)=>{
-        if(!delta)return;
-        const oldRef=ws['!ref']||'A1:AG1000';
-        const cells={};
-        Object.keys(ws).forEach(addr=>{
-          if(addr[0]==='!')return;
-          const m=addr.match(/^(\$?[A-Z]+)(\$?\d+)$/);
-          if(!m)return;
-          const row=Number(m[2].replace('$',''));
-          if(row<startRow)return;
-          const col=m[1].replace('$','');
-          cells[`${col}${row+delta}`]=ws[addr];
-          delete ws[addr];
-        });
-        Object.entries(cells).forEach(([addr,cell])=>ws[addr]=cell);
-        if(ws['!rows']){
-          const oldRows=ws['!rows'];
-          const next=[];
-          for(let i=0;i<oldRows.length;i++){
-            const rowNum=i+1;
-            if(rowNum<startRow)next[i]=oldRows[i];
-            else next[i+delta]=oldRows[i];
-          }
-          ws['!rows']=next;
+      const cloneCell=(ws,from,to)=>{ if(templateWs[from]) ws[to]=JSON.parse(JSON.stringify(templateWs[from])); else delete ws[to]; };
+      const colLetter=n=>{let s='';while(n){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;};
+      const copyRow=(ws,srcRow,dstRow)=>{
+        for(let c=1;c<=9;c++){
+          const col=colLetter(c),from=`${col}${srcRow}`,to=`${col}${dstRow}`;
+          cloneCell(ws,from,to);
         }
-        if(ws['!merges']){
-          ws['!merges']=ws['!merges'].map(m=>{
-            const mm={s:{...m.s},e:{...m.e}};
-            if(mm.s.r+1>=startRow)mm.s.r+=delta;
-            if(mm.e.r+1>=startRow)mm.e.r+=delta;
-            return mm;
-          });
+        if(templateWs['!rows']?.[srcRow-1]){
+          ws['!rows']=ws['!rows']||[];
+          ws['!rows'][dstRow-1]=JSON.parse(JSON.stringify(templateWs['!rows'][srcRow-1]));
         }
-        // Keep the print range large enough after inserting continuation rows.
-        const refMatch=oldRef.match(/:([A-Z]+)(\d+)$/);
-        const lastRow=Math.max(Number(refMatch?.[2]||1000)+delta,1000);
-        ws['!ref']=`A1:AG${lastRow}`;
-      };
-
-      const unmerge=(ws,range)=>{
-        if(!ws['!merges'])return;
-        const [a,b]=range.split(':');
-        const parse=addr=>{const m=addr.match(/^([A-Z]+)(\d+)$/);return {c:m[1],r:Number(m[2])};};
-        const s=parse(a),e=parse(b);
-        ws['!merges']=ws['!merges'].filter(m=>!(m.s.r===s.r-1&&m.e.r===e.r-1));
-      };
-      const addMerge=(ws,range)=>{
-        const [a,b]=range.split(':');
-        const parse=addr=>{const m=addr.match(/^([A-Z]+)(\d+)$/);return {c:m[1],r:Number(m[2])};};
-        const colNum=c=>{let n=0;for(const ch of c)n=n*26+ch.charCodeAt(0)-64;return n-1;};
-        const s=parse(a),e=parse(b);
-        ws['!merges']=ws['!merges']||[];
-        if(!ws['!merges'].some(m=>m.s.r===s.r-1&&m.e.r===e.r-1&&m.s.c===colNum(s.c)&&m.e.c===colNum(e.c)))
-          ws['!merges'].push({s:{r:s.r-1,c:colNum(s.c)},e:{r:e.r-1,c:colNum(e.c)}});
       };
       const setCell=(ws,addr,value,type='s',alignment={})=>{
         const old=ws[addr]||{};
         delete old.f;
         ws[addr]={...old,v:value,t:type};
-        if(alignment&&Object.keys(alignment).length)ws[addr].s={...(ws[addr].s||{}),alignment:{...((ws[addr].s&&ws[addr].s.alignment)||{}),...alignment}};
+        if(Object.keys(alignment).length)ws[addr].s={...(ws[addr].s||{}),alignment:{...((ws[addr].s&&ws[addr].s.alignment)||{}),...alignment}};
       };
-      const clearCell=(ws,addr)=>setCell(ws,addr,'','s');
-      const setRowHeight=(ws,row,lines)=>{
-        ws['!rows']=ws['!rows']||[];
-        const existing=ws['!rows'][row-1]||{};
-        ws['!rows'][row-1]={...existing,hpt:Math.max(Number(existing.hpt)||0,Math.min(240,Math.max(18,lines*18)))};
-      };
+      const clear=(ws,addr)=>{ const old=ws[addr]||{}; delete old.f; ws[addr]={...old,v:'',t:'s'}; };
+      const merge=(ws,c1,r1,c2,r2)=>{ ws['!merges']=ws['!merges']||[]; ws['!merges'].push({s:{r:r1-1,c:c1-1},e:{r:r2-1,c:c2-1}}); };
+      const baseMerges=JSON.parse(JSON.stringify(templateWs['!merges']||[]));
 
       let sheetIndex=0;
       for(const group of branchMap.values()){
@@ -256,113 +206,71 @@ export default function UsedParts(){
           const asset=val(x.assetCode).trim();
           const serial=val(x.serialNo||x.assetSerialNo).trim();
           const assetOrSerial=asset||serial;
-          if(assetOrSerial&&!g.assets.includes(assetOrSerial))g.assets.push(assetOrSerial);
+          if(assetOrSerial && !g.assets.includes(assetOrSerial))g.assets.push(assetOrSerial);
         });
         const rows=[...grouped.values()].sort((a,b)=>a.itemCode.localeCompare(b.itemCode));
-
-        // Two item groups per sheet, but each asset/serial gets its own row.
-        // The second group is shifted down when the first group has multiple assets.
-        for(let i=0;i<rows.length;i+=2){
-          const chunk=rows.slice(i,i+2);
-          const ws=JSON.parse(JSON.stringify(templateWs));
-          ws['G9']={...(ws['G9']||{}),v:group.branch,t:'s'};
-          ws['U8']={...(ws['U8']||{}),v:new Date(),t:'d'};
-
-          // Clear the two original item groups before rebuilding them.
-          ['B14','E14','I14','I15','I16','V14','AB14','B17','E17','I17','I18','I19','V17','AB17','AB18'].forEach(a=>clearCell(ws,a));
-
-          const first=chunk[0];
-          const firstAssets=first?.assets||[];
-          const firstNextStart=17+firstAssets.length;
-          const firstDelta=Math.max(0,firstNextStart-17);
-          if(firstDelta)shiftRows(ws,17,firstDelta);
-
-          // Rebuild merge layout for continuation rows.
-          // Existing template detail merges are removed, then one merge is created
-          // for every physical ASSET CODE/SERIAL row and the final NOTHING TO FOLLOW row.
-          const removeDetailMerges=()=>{
-            ws['!merges']=(ws['!merges']||[]).filter(m=>!(m.s.c===8&&m.e.c===19&&m.s.r>=14));
-          };
-          removeDetailMerges();
-
-          let grandTotal=0;
-          let secondStart=17;
-          chunk.forEach((row,idx)=>{
-            const start=idx===0?14:secondStart;
-            // Row immediately below the item row is reserved for the *** markers.
-            const markerRow=start+1;
-            // Asset/serial rows begin below the marker row.
-            const assetStart=start+2;
-            const assets=row.assets.length?row.assets:[];
-            const total=row.price*row.qty;
-            grandTotal+=total;
-
-            setCell(ws,`B${start}`,row.itemCode,'s',{horizontal:'center',vertical:'center',wrapText:true});
-            setCell(ws,`E${start}`,row.qty,'n',{horizontal:'center',vertical:'center'});
-            setCell(ws,`I${start}`,row.description,'s',{horizontal:'center',vertical:'center',wrapText:true});
-            if(Number(row.price)>0){
-              setCell(ws,`V${start}`,row.price,'n',{horizontal:'center',vertical:'center'});
-              ws[`V${start}`].z='0.00';
-            } else {
-              clearCell(ws,`V${start}`);
-            }
-            if(Number(total)>0){
-              setCell(ws,`AB${start}`,total,'n',{horizontal:'center',vertical:'center'});
-              ws[`AB${start}`].z='0.00';
-            } else {
-              clearCell(ws,`AB${start}`);
-            }
-            addMerge(ws,`I${start}:T${start}`);
-
-            // *** must be on its own row directly below PRICE and TOTAL.
-            setCell(ws,`V${markerRow}`,'******','s',{horizontal:'center',vertical:'center'});
-            setCell(ws,`AB${markerRow}`,'******','s',{horizontal:'center',vertical:'center'});
-
-            // Every asset/serial is a separate Excel row below the marker row.
-            assets.forEach((identifier,j)=>{
-              const rr=assetStart+j;
-              setCell(ws,`I${rr}`,identifier,'s',{horizontal:'center',vertical:'center',wrapText:true});
-              addMerge(ws,`I${rr}:T${rr}`);
-              setRowHeight(ws,rr,1);
-            });
-
-            // Leave one blank row before the next Item Code group.
-            if(idx===0)secondStart=assetStart+assets.length+1;
-          });
-
-          // NOTHING TO FOLLOW is written exactly once, at the very bottom of the
-          // whole sheet/chunk, never after each Item Code.
-          const last=chunk[chunk.length-1];
-          const lastStart=chunk.length===1?14:secondStart;
-          const lastAssetCount=(last?.assets||[]).length;
-          const lastNothingRow=lastStart+2+lastAssetCount;
-          if(chunk.length>1){
-            setCell(ws,`I${lastNothingRow}`,'***********NOTHING TO FOLLOW***********','s',{horizontal:'center',vertical:'center',wrapText:true});
-            addMerge(ws,`I${lastNothingRow}:T${lastNothingRow}`);
-            setRowHeight(ws,lastNothingRow,1);
-          }
-
-          // Grand total remains in the AB column, aligned with the final item block.
-          const totalRow=lastStart;
-          if(Number(grandTotal)>0){
-            setCell(ws,`AB${totalRow}`,grandTotal,'n',{horizontal:'center',vertical:'center'});
-            ws[`AB${totalRow}`].z='0.00';
-          } else {
-            clearCell(ws,`AB${totalRow}`);
-          }
-          ws['!cols']=templateWs['!cols'];
-          ws['!margins']=templateWs['!margins'];
-          ws['!pageSetup']=templateWs['!pageSetup'];
-          ws['!printHeader']=templateWs['!printHeader'];
-          ws['!ref']='A1:AG1000';
-          XLSX.utils.book_append_sheet(outWb,ws,safeSheetName(group.branch,++sheetIndex));
+        const ws=JSON.parse(JSON.stringify(templateWs));
+        ws['!merges']=baseMerges;
+        // The uploaded LX-310 template uses H4 for date and C5 for branch/heading.
+        setCell(ws,'H4',new Date(),'d',{horizontal:'center',vertical:'center'});
+        setCell(ws,'C5',group.branch,'s',{horizontal:'center',vertical:'center'});
+        // Remove sample values from the template while retaining its formatting.
+        for(let r=9;r<=Math.max(30,templateWs['!ref']?.match(/:(?:[A-Z]+)(\d+)/)?.[1]||30);r++){
+          for(let c=1;c<=9;c++)clear(ws,`${colLetter(c)}${r}`);
         }
+        ws['!merges']=[];
+        let row=9;
+        let grandTotal=0;
+        rows.forEach((item,idx)=>{
+          const header=row;
+          const marker=row+1;
+          const assetsStart=row+2;
+          const assets=item.assets||[];
+          const total=item.price*item.qty;
+          grandTotal+=total;
+          copyRow(ws,9,header);
+          copyRow(ws,10,marker);
+          setCell(ws,`A${header}`,item.itemCode,'s',{horizontal:'center',vertical:'center',wrapText:true});
+          setCell(ws,`B${header}`,item.qty,'n',{horizontal:'center',vertical:'center'});
+          setCell(ws,`C${header}`,item.description,'s',{horizontal:'center',vertical:'center',wrapText:true});
+          setCell(ws,`H${header}`,item.price,'n',{horizontal:'center',vertical:'center'}); ws[`H${header}`].z='0.00';
+          setCell(ws,`I${header}`,total,'n',{horizontal:'center',vertical:'center'}); ws[`I${header}`].z='0.00';
+          merge(ws,3,header,7,header);
+          // Six asterisks are directly below Price and Total.
+          clear(ws,`C${marker}`);
+          setCell(ws,`H${marker}`,'******','s',{horizontal:'center',vertical:'center'});
+          setCell(ws,`I${marker}`,'******','s',{horizontal:'center',vertical:'center'});
+          merge(ws,3,marker,7,marker);
+          assets.forEach((identifier,j)=>{
+            const rr=assetsStart+j;
+            copyRow(ws,10,rr);
+            clear(ws,`H${rr}`); clear(ws,`I${rr}`);
+            setCell(ws,`C${rr}`,identifier,'s',{horizontal:'center',vertical:'center',wrapText:true});
+            merge(ws,3,rr,7,rr);
+          });
+          // One blank row before the next Item Code.
+          row=assetsStart+assets.length+1;
+        });
+        // NOTHING TO FOLLOW appears once, at the very bottom of the Description column.
+        const nothingRow=row;
+        copyRow(ws,11,nothingRow);
+        clear(ws,`A${nothingRow}`); clear(ws,`B${nothingRow}`); clear(ws,`H${nothingRow}`); clear(ws,`I${nothingRow}`);
+        setCell(ws,`C${nothingRow}`,'***********NOTHING TO FOLLOW***********','s',{horizontal:'center',vertical:'center',wrapText:true});
+        merge(ws,3,nothingRow,7,nothingRow);
+        // Preserve template print settings; expand print range to the generated rows.
+        ws['!cols']=templateWs['!cols'];
+        ws['!margins']=templateWs['!margins'];
+        ws['!pageSetup']=templateWs['!pageSetup'];
+        ws['!printHeader']=templateWs['!printHeader'];
+        ws['!ref']=`A1:I${nothingRow}`;
+        XLSX.utils.book_append_sheet(outWb,ws,safeSheetName(group.branch,++sheetIndex));
       }
       const stamp=new Date().toISOString().slice(0,10);
       XLSX.writeFile(outWb,`EDP_NOT_DR_BY_BRANCH_${stamp}.xlsx`);
-      await audit({action:'PRINT_NOT_DR_BY_BRANCH',details:`Generated NOT DR report using PRINT DR template for ${branchMap.size} branch(es), ${pending.length} record(s)`});
+      await audit({action:'PRINT_NOT_DR_BY_BRANCH',details:`Generated NOT DR report using LX-310 DR template for ${branchMap.size} branch(es), ${pending.length} record(s)`});
     }catch(e){setError(e.message||'Unable to generate NOT DR report.');}
   };
+
   if(profile?.role!=='super_admin')return <div className="screen-message"><div className="dark-card"><h2>Access Restricted</h2><p>Used Parts is available to Super Admin only.</p></div></div>;
   return <>
     <div className="page-title-row parts-page-heading"><div><span className="eyebrow">PARTS INVENTORY</span><h1>Used Parts</h1><p>Record parts that have been used. Saving a record automatically deducts 1 from the selected Parts Inventory item.</p></div><div className="page-actions no-print"><button className="ghost-btn" onClick={printNotDRByBranch}>⇩ Print DR (NOT DR)</button><button className="amber-btn" onClick={openAdd}>＋ Add Used Part</button></div></div>
